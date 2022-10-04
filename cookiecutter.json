@@ -1,0 +1,9 @@
+{
+    "plugin_name": "PluginName",
+    "plugin_description": "Write a plugin description here",
+    "_copy_without_render": [
+        "{{cookiecutter.plugin_name}}/fmt/src/*", 
+        "{{cookiecutter.plugin_name}}/fmt/include/fmt/*", 
+        "{{cookiecutter.plugin_name}}/IMGUI/*"
+    ]
+}
