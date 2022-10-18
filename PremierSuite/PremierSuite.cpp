@@ -732,7 +732,7 @@ void PremierSuite::onLoad()
 {
 
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
-	BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
+	std::filesystem::path BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
 	if (!exists(BakkesModCrashesFolder)) {
 		std::filesystem::create_directory(BakkesModCrashesFolder);
 	}
@@ -783,21 +783,6 @@ void PremierSuite::onLoad()
 
 	cvarManager->loadCfg("bakkesmod/cfg/PremierSuite");
 
-	cvarManager->registerNotifier("is_change_keybind", [this](const std::vector<std::string>& arguments) 
-		{
-		std::string key;
-		if (arguments.size() >= 2) {
-			key = arguments[1];
-		}
-		else {
-			key = cvarManager->getCvar("is_gui_keybind").getStringValue();
-		}
-
-		const std::string command = "togglemenu " + GetMenuName();
-		cvarManager->setBind(key, command);
-		}, "Adds a keybind for " + quote("togglemenu " + GetMenuName()) + " as $is_gui_keybind.",
-			PERMISSION_ALL);
-		
 	// Set the window bind to the default keybind if is not set.
 	if (!IsGUIWindowBound(GetMenuName())) {
 		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
