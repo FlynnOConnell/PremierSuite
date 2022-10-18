@@ -339,3 +339,9 @@ MigrationBackup/
 *.exp
 plugins*
 !plugins/settings
+
+.idea
+.idea/
+.idea/*
+.idea/**
+.idea/**/*
