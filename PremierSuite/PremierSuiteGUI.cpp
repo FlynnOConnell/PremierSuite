@@ -13,10 +13,9 @@
 void PremierSuite::Render()
 {
 	static bool show_app_main_menu_bar = true;
-	if (ImGui::Begin(menuTitle.c_str(), &isWindowOpen, ImGuiWindowFlags_None))
+	if (ImGui::Begin(menuTitle.c_str(), &isWindowOpen, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		if (ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
-			ImGui::SetNextWindowSize(ImVec2(2000, 1000));
 			renderInstantSettingsTab();
 			renderKeybindsTab();
 			ImGui::EndTabBar();
@@ -87,12 +86,10 @@ void PremierSuite::OnClose()
 /// <summary>Main Settings Tab.</summary>
 void PremierSuite::renderInstantSettingsTab()
 {
-	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
 	ImGui::StyleColorsDark();
 	if (ImGui::BeginTabItem("Settings"), ImGuiWindowFlags_NoNavInputs)
 	{ 
-
-		if (ImGui::BeginChild("Main Settings", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 200), false, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::BeginChild("Main Settings"))
 		{
 			ImGui::Text(
 				"Instant Suite: Instant Access to Queue, Freeplay, and Custom Training.\n"
@@ -177,8 +174,7 @@ void PremierSuite::renderInstantSettingsTab()
 				cvarManager->log("Delay Set");
 			}
 			ImGui::PopItemWidth();
-		}
-		ImGui::EndChild();
+		
 
 		ImGui::Text("Instant Exit:");
 
@@ -250,6 +246,8 @@ void PremierSuite::renderInstantSettingsTab()
 			}
 			ImGui::TreePop();
 		}
+		}
+		ImGui::EndChild();
 		ImGui::EndTabItem();
 	}
 }

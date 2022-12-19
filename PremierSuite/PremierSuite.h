@@ -89,8 +89,6 @@ private:
 	static constexpr const char* keybindCvarName = "is_gui_keybind";
 	static constexpr const char* keyholderCvarName = "key_holder";
 
-
-
 	static constexpr const char* trainingMapCvarName = "is_trainingMap";
 	static constexpr const char* customtrainingCvarName = "is_ctrainingMap";
 	static constexpr const char* workshopCvarName = "is_workshopMap";
