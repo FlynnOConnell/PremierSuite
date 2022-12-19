@@ -16,7 +16,7 @@ void PremierSuite::Render()
 	if (ImGui::Begin(menuTitle.c_str(), &isWindowOpen, ImGuiWindowFlags_None))
 	{
 		if (ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
-
+			ImGui::SetNextWindowSize(ImVec2(2000, 1000));
 			renderInstantSettingsTab();
 			renderKeybindsTab();
 			ImGui::EndTabBar();
@@ -87,8 +87,11 @@ void PremierSuite::OnClose()
 /// <summary>Main Settings Tab.</summary>
 void PremierSuite::renderInstantSettingsTab()
 {
-	if (ImGui::BeginTabItem("Settings"))
+	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiCond_FirstUseEver);
+	ImGui::StyleColorsDark();
+	if (ImGui::BeginTabItem("Settings"), ImGuiWindowFlags_NoNavInputs)
 	{ 
+
 		if (ImGui::BeginChild("Main Settings", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 200), false, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::Text(
@@ -210,19 +213,23 @@ void PremierSuite::renderInstantSettingsTab()
 			static auto ctrainingPCvar = cvarManager->getCvar(customtrainingCvarName);
 			auto customtrainingPCvarName = ctrainingPCvar.getStringValue();
 
+			static ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsNoBlank;
+
 			ImGui::Text("Instant Custom Training Settings");
 			if (ImGui::Checkbox("##Enable", &customTrainingEnabled)) {
 				ctrainingCvar.setValue(customTrainingEnabled);
 				cvarManager->executeCommand("writeconfig", false);
-				cvarManager->log("Custom Training Enabled!");
+				cvarManager->log("Custom Training Enabled! Current training pack: " + customtrainingPCvarName);
 			}
 
 			ImGui::SameLine();
 			ImGui::PushItemWidth(200);
-			if (ImGui::InputTextWithHint("Training Pack Code", "XXXX-XXXX-XXXX-XXXX", str0, IM_ARRAYSIZE(str0), 0, 0, &customtrainingPCvarName)) {
-				ctrainingPCvar.setValue(customtrainingPCvarName);
+			if (ImGui::InputTextWithHint("Training Pack Code", "XXXX-XXXX-XXXX-XXXX", str0, IM_ARRAYSIZE(str0), 0, 0)) {
+				ctrainingPCvar.setValue(str0);
 				cvarManager->executeCommand("writeconfig", false);
-				cvarManager->log("Training Pack Code Set");
+				cvarManager->log("New training pack code entered:");
+				cvarManager->log(str0);
+
 			}
 			ImGui::PopItemWidth();
 			ImGui::TreePop();
@@ -255,7 +262,7 @@ void PremierSuite::renderKeybindsTab()
 {
 	if (ImGui::BeginTabItem("Keybinds"))
 	{
-		if (ImGui::BeginChild("##Keybinds", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 260), false, ImGuiWindowFlags_AlwaysAutoResize));
+		if (ImGui::BeginChild("##Keybinds", ImVec2(ImGui::GetWindowContentRegionWidth() * 0.5f, 260), false, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::Text(
 				"Easily Change keybinds to whatever button you'd like.\n"

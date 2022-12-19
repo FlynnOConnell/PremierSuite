@@ -461,7 +461,7 @@ void PremierSuite::delayedCustomTraining()
 	auto game = gameWrapper->GetOnlineGame();
 	auto training_code = cvarManager->getCvar(customtrainingCvarName).getStringValue();
 
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+	if (game.IsNull()) { cvarManager->log("null_pntr"); return; }
 
 	if (!game.IsNull())
 	{
