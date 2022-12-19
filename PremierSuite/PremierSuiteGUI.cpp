@@ -305,111 +305,106 @@ void PremierSuite::renderKeybindsTab()
 /// WORKSHOP: BETA
 ///
 
-//ImGui::TreeNode("#Workshop");
-//{
-//
-//	static auto workshopCvar = cvarManager->getCvar(wtrainingCvarName);
-//	auto enableWorkshopMaps = workshopCvar.getBoolValue();
-//	static auto workshopMapCvar = cvarManager->getCvar(workshopCvarName);
-//	std::string workshopMapCvarString = workshopCvar.getStringValue();
-//
-//	if (gameWrapper->IsUsingSteamVersion()) {
-//		ImGui::SameLine();
-//		if (ImGui::Checkbox("Enable workshop maps", &enableWorkshopMaps)) {
-//			currentMap.clear();
-//			refreshCustomMapPaths = true;
-//		}
-//	}
-//	ImGui::SameLine();
-//	if (ImGui::Checkbox("Enable custom maps", &enableCustomMaps))
-//	{
-//		currentMap.clear();
-//		refreshCustomMapPaths = true;
-//	}
-//	if (!enableWorkshopMaps && !enableCustomMaps)
-//	{
-//		if (ImGui::SearchableCombo("##Maps", currentMap, maps, "No maps found", "type to search"))
-//		{
-//			workshopMapCvar.setValue(workshopMapCvarString);
-//			cvarManager->executeCommand("writeconfig", false);
-//			cvarManager->log("no map selected");
-//		}
-//	}
-//	else
-//	{
-//		std::filesystem::path currentMapPath = currentMap;
-//		if (renderCustomMapsSelection(customMapPaths, currentMapPath, refreshCustomMapPaths, enableWorkshopMaps, enableCustomMaps))
-//		{
-//			currentMap = currentMapPath.string();
-//			const std::filesystem::path config = currentMapPath.replace_extension(L".cfg");
-//
-//		}
-//	}
-//
-//	ImGui::TreePop();
-//}
+ImGui::TreeNode("#Workshop"); {
 
-///<summary>Renders Workshop and Custom Maps.</summary>
-//bool PremierSuite::renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps, std::filesystem::path& currentCustomMap, bool& refreshCustomMaps, const bool includeWorkshopMaps, const bool includeCustomMaps)
-//{
-//	if (refreshCustomMaps) {
-//		customMaps.clear();
-//		if (includeWorkshopMaps && gameWrapper->IsUsingSteamVersion()) {
-//			bool addedWorkshopMaps = false;
-//			customMaps.insert({ *workshopMapDirPath, "#Workshop Maps:" });
-//			for (const std::filesystem::path& workshopMap : getWorkshopMaps(*workshopMapDirPath)) {
-//				addedWorkshopMaps = true;
-//				if (auto it = subscribedWorkshopMaps.find(
-//					std::strtoull(workshopMap.parent_path().stem().string().c_str(), nullptr, 10));
-//					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
-//					customMaps.insert({ workshopMap, it->second.Title });
-//				}
-//				else {
-//					customMaps.insert({ workshopMap, workshopMap.stem().u8string() });
-//				}
-//			}
-//			if (!addedWorkshopMaps) {
-//				customMaps.erase(*workshopMapDirPath);
-//			}
-//		}
-//		if (includeCustomMaps) {
-//			bool addedCustomMaps = false;
-//			customMaps.insert({ *customMapDirPath, "#Custom Maps:" });
-//			for (const std::filesystem::path& customMap : GetFilesFromDir(*customMapDirPath, 2, ".upk", ".udk")) {
-//				addedCustomMaps = true;
-//				if (auto it = subscribedWorkshopMaps.find(
-//					std::strtoull(customMap.parent_path().stem().string().c_str(), nullptr, 10));
-//					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
-//					customMaps.insert({ customMap, it->second.Title });
-//				}
-//				else {
-//					customMaps.insert({ customMap, customMap.stem().u8string() });
-//				}
-//			}
-//			if (!addedCustomMaps) {
-//				customMaps.erase(*customMapDirPath);
-//			}
-//			bool addedCopiedMaps = false;
-//			customMaps.insert({ COPIED_MAPS_PATH, "#Copied Maps:" });
-//			for (const std::filesystem::path& customMap : GetFilesFromDir(COPIED_MAPS_PATH, 1, ".upk")) {
-//				addedCopiedMaps = true;
-//				customMaps.insert({ customMap, customMap.stem().u8string() });
-//			}
-//			if (!addedCopiedMaps) {
-//				customMaps.erase(COPIED_MAPS_PATH);
-//			}
-//		}
-//		refreshCustomMaps = false;
-//	}
-//
-//	bool valueChanged = false;
-//	if (ImGui::SearchableCombo("##Maps", currentCustomMap, customMaps, "No maps found", "type to search")) {
-//		valueChanged = true;
-//
-//	}
-//
-//	return valueChanged;
-//}
+	static auto workshopCvar = cvarManager->getCvar(wtrainingCvarName);
+	auto enableWorkshopMaps = workshopCvar.getBoolValue();
+	static auto workshopMapCvar = cvarManager->getCvar(workshopCvarName);
+	std::string workshopMapCvarString = workshopCvar.getStringValue();
+
+	if (gameWrapper->IsUsingSteamVersion()) {
+		ImGui::SameLine();
+		if (ImGui::Checkbox("Enable workshop maps", &enableWorkshopMaps)) {
+			currentMap.clear();
+			refreshCustomMapPaths = true;
+		}
+	}
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Enable custom maps", &enableCustomMaps)) {
+		currentMap.clear();
+		refreshCustomMapPaths = true;
+	}
+	if (!enableWorkshopMaps && !enableCustomMaps) {
+		if (ImGui::SearchableCombo("##Maps", currentMap, maps, "No maps found", "type to search")) {
+			workshopMapCvar.setValue(workshopMapCvarString);
+			cvarManager->executeCommand("writeconfig", false);
+			cvarManager->log("no map selected");
+		}
+	}
+	else {
+		std::filesystem::path currentMapPath = currentMap;
+		if (renderCustomMapsSelection(customMapPaths, currentMapPath, refreshCustomMapPaths, enableWorkshopMaps, enableCustomMaps))
+		{
+			currentMap = currentMapPath.string();
+			const std::filesystem::path config = currentMapPath.replace_extension(L".cfg");
+
+		}
+	}
+
+	ImGui::TreePop();
+}
+
+/<summary>Renders Workshop and Custom Maps.</summary>
+bool PremierSuite::renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps, std::filesystem::path& currentCustomMap,
+					     bool& refreshCustomMaps, const bool includeWorkshopMaps, const bool includeCustomMaps) {
+	if (refreshCustomMaps) {
+		customMaps.clear();
+		if (includeWorkshopMaps && gameWrapper->IsUsingSteamVersion()) {
+			bool addedWorkshopMaps = false;
+			customMaps.insert({ *workshopMapDirPath, "#Workshop Maps:" });
+			for (const std::filesystem::path& workshopMap : getWorkshopMaps(*workshopMapDirPath)) {
+				addedWorkshopMaps = true;
+				if (auto it = subscribedWorkshopMaps.find(
+					std::strtoull(workshopMap.parent_path().stem().string().c_str(), nullptr, 10));
+					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
+					customMaps.insert({ workshopMap, it->second.Title });
+				}
+				else {
+					customMaps.insert({ workshopMap, workshopMap.stem().u8string() });
+				}
+			}
+			if (!addedWorkshopMaps) {
+				customMaps.erase(*workshopMapDirPath);
+			}
+		}
+		if (includeCustomMaps) {
+			bool addedCustomMaps = false;
+			customMaps.insert({ *customMapDirPath, "#Custom Maps:" });
+			for (const std::filesystem::path& customMap : GetFilesFromDir(*customMapDirPath, 2, ".upk", ".udk")) {
+				addedCustomMaps = true;
+				if (auto it = subscribedWorkshopMaps.find(
+					std::strtoull(customMap.parent_path().stem().string().c_str(), nullptr, 10));
+					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
+					customMaps.insert({ customMap, it->second.Title });
+				}
+				else {
+					customMaps.insert({ customMap, customMap.stem().u8string() });
+				}
+			}
+			if (!addedCustomMaps) {
+				customMaps.erase(*customMapDirPath);
+			}
+			bool addedCopiedMaps = false;
+			customMaps.insert({ COPIED_MAPS_PATH, "#Copied Maps:" });
+			for (const std::filesystem::path& customMap : GetFilesFromDir(COPIED_MAPS_PATH, 1, ".upk")) {
+				addedCopiedMaps = true;
+				customMaps.insert({ customMap, customMap.stem().u8string() });
+			}
+			if (!addedCopiedMaps) {
+				customMaps.erase(COPIED_MAPS_PATH);
+			}
+		}
+		refreshCustomMaps = false;
+	}
+
+	bool valueChanged = false;
+	if (ImGui::SearchableCombo("##Maps", currentCustomMap, customMaps, "No maps found", "type to search")) {
+		valueChanged = true;
+
+	}
+
+	return valueChanged;
+}
 
 
 
