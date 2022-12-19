@@ -152,8 +152,10 @@ public:
 	virtual void OnClose();
 
 private:
+	void SetupImGuiStyle();
+	void ShowStylesPopup();
 	void renderInstantSettingsTab();
-	void renderTrainingPacksTab();
+	void renderStylesTab();
 	void renderKeybindsTab();
 	bool hooked = false;
 	bool enableCustomMaps = false;

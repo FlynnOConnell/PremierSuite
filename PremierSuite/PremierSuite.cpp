@@ -780,7 +780,6 @@ void PremierSuite::onLoad()
 	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
 	cvarManager->registerCvar(keyholderCvarName, "", "Keybind for the gui");
 
-
 	cvarManager->loadCfg("bakkesmod/cfg/PremierSuite");
 
 	// Set the window bind to the default keybind if is not set.
