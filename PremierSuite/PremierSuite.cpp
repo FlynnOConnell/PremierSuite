@@ -6,7 +6,7 @@
 #include "PremierSuite.h"
 
 
-BAKKESMOD_PLUGIN(PremierSuite, "Instant Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
+BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
 std::filesystem::path BakkesModConfigFolder;
 std::filesystem::path PremierSuiteDataFolder;
@@ -611,7 +611,6 @@ void PremierSuite::changeGuiKeybind(std::string newKeybind)
 void PremierSuite::quickPluginEnabled()
 {
 	bool pluginEnabled = cvarManager->getCvar(enabledCvarName).getBoolValue();
-
 	if (pluginEnabled == false) {
 		cvarManager->getCvar(enabledCvarName).setValue(true);
 	}
@@ -703,7 +702,7 @@ void PremierSuite::logHookType(const char* const hookType) const
 	cvarManager->log(logBuffer.str());
 }
 
-void PremierSuite::removeOldPlugin() { // disable deprecated predecessor plugin InstantTraining
+void PremierSuite::removeOldPlugin() {
 	cvarManager->executeCommand("unload premiersuite");
 	cvarManager->executeCommand("writeplugins");
 }
@@ -716,9 +715,10 @@ void PremierSuite::onLoad()
 	if (!exists(BakkesModCrashesFolder)) {
 		std::filesystem::create_directory(BakkesModCrashesFolder);
 	}
-	PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"PremierSuite";
+	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"PremierSuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
+		cvarManager->log("Data folder greated:" + PremierSuiteDataFolder.u8string());
 	}
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
@@ -779,7 +779,4 @@ void PremierSuite::onUnload()
 		//* Save all cvars to 'config.cfg'.
 		cvarManager->backupCfg(CONFIG_FILE_PATH.string());
 	}
-
-
-
 }

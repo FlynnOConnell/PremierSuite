@@ -1,3 +1,6 @@
+#include "pch.h"
+#include "IMGUI/imgui.h"
+
 // This software is provided 'as-is', without any express or implied
 // warranty.  In no event will the authors be held liable for any damages
 // arising from the use of this software.
@@ -49,7 +52,7 @@ To edit and save a style, you can use the default ImGui example and append to th
             if (resetCurrentStyle)  ImGui::GetStyle() = ImGuiStyle();
 */
 
-#include <imgui.h>
+
 
 // From <imgui.cpp>:--------------------------------------------------------
 #include <stdio.h>      // vsnprintf
@@ -83,17 +86,14 @@ bool ImGuiSaveStyle(const char* filename, const ImGuiStyle& style)
     fprintf(f, "[ItemSpacing]\n%1.3f %1.3f\n", style.ItemSpacing.x, style.ItemSpacing.y);
     fprintf(f, "[ItemInnerSpacing]\n%1.3f %1.3f\n", style.ItemInnerSpacing.x, style.ItemInnerSpacing.y);
     fprintf(f, "[TouchExtraPadding]\n%1.3f %1.3f\n", style.TouchExtraPadding.x, style.TouchExtraPadding.y);
-    fprintf(f, "[AutoFitPadding]\n%1.3f %1.3f\n", style.AutoFitPadding.x, style.AutoFitPadding.y);
-    fprintf(f, "[WindowFillAlphaDefault]\n%1.3f\n", style.WindowFillAlphaDefault);
     fprintf(f, "[WindowRounding]\n%1.3f\n", style.WindowRounding);
-    fprintf(f, "[TreeNodeSpacing]\n%1.3f\n", style.TreeNodeSpacing);
     fprintf(f, "[ColumnsMinSpacing]\n%1.3f\n", style.ColumnsMinSpacing);
-    fprintf(f, "[ScrollBarWidth]\n%1.3f\n", style.ScrollBarWidth);
+    fprintf(f, "[ScrollbarSize]\n%1.3f\n", style.ScrollbarSize);
 
     for (size_t i = 0; i != ImGuiCol_COUNT; i++)
     {
         const ImVec4& c = style.Colors[i];
-        fprintf(f, "[%s]\n", ImGui::GetStyleColName(i));//ImGuiColNames[i]);
+        fprintf(f, "[%s]\n", ImGui::GetStyleColorName(i));//ImGuiColNames[i]);
         fprintf(f, "%1.3f %1.3f %1.3f %1.3f\n", c.x, c.y, c.z, c.w);
     }
 
@@ -164,16 +164,13 @@ bool ImGuiLoadStyle(const char* filename, ImGuiStyle& style)
                 else if (strcmp(name, "ItemSpacing") == 0) { npf = 2; pf[0] = &style.ItemSpacing.x; pf[1] = &style.ItemSpacing.y; }
                 else if (strcmp(name, "ItemInnerSpacing") == 0) { npf = 2; pf[0] = &style.ItemInnerSpacing.x; pf[1] = &style.ItemInnerSpacing.y; }
                 else if (strcmp(name, "TouchExtraPadding") == 0) { npf = 2; pf[0] = &style.TouchExtraPadding.x; pf[1] = &style.TouchExtraPadding.y; }
-                else if (strcmp(name, "AutoFitPadding") == 0) { npf = 2; pf[0] = &style.AutoFitPadding.x; pf[1] = &style.AutoFitPadding.y; }
-                else if (strcmp(name, "WindowFillAlphaDefault") == 0) { npf = 1; pf[0] = &style.WindowFillAlphaDefault; }
                 else if (strcmp(name, "WindowRounding") == 0) { npf = 1; pf[0] = &style.WindowRounding; }
-                else if (strcmp(name, "TreeNodeSpacing") == 0) { npf = 1; pf[0] = &style.TreeNodeSpacing; }
                 else if (strcmp(name, "ColumnsMinSpacing") == 0) { npf = 1; pf[0] = &style.ColumnsMinSpacing; }
-                else if (strcmp(name, "ScrollBarWidth") == 0) { npf = 1; pf[0] = &style.ScrollBarWidth; }
+                else if (strcmp(name, "ScrollbarSize") == 0) { npf = 1; pf[0] = &style.ScrollbarSize; }
                 // all the colors here
                 else {
                     for (int j = 0; j < ImGuiCol_COUNT; j++) {
-                        if (strcmp(name, ImGui::GetStyleColName(j)) == 0) {
+                        if (strcmp(name, ImGui::GetStyleColorName(j)) == 0) {
                             npf = 4;
                             ImVec4& color = style.Colors[j];
                             pf[0] = &color.x; pf[1] = &color.y; pf[2] = &color.z; pf[3] = &color.w;

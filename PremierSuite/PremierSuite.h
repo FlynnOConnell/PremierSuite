@@ -152,12 +152,14 @@ public:
 	virtual void OnClose();
 
 private:
-	void SetupImGuiStyle();
+
 	void renderStyleEditorTab(ImGuiStyle* ref);
 	void renderKeybindsTab();
 	void renderSettingsTab();
-	
 	void renderMenu();
+	void renderAboutWindow(bool* p_open);
+	void StyleColorsCustom();
+	bool showStyleCombo(const char* label);
 	bool hooked = false;
 	bool enableCustomMaps = false;
 	bool enableWorkshopMaps = false;
