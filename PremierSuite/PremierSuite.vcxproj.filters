@@ -72,6 +72,9 @@
     <ClCompile Include="fmt\src\os.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="imgui_styleserialize.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PremierSuite.h">
@@ -127,5 +130,9 @@
     <ResourceCompile Include="PremierSuite.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".gitignore" />
+    <None Include="plugins\PremierSuite.set" />
   </ItemGroup>
 </Project>
