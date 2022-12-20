@@ -1,0 +1,15 @@
+PremierSuite
+9 |
+8 |
+9 | The default keybind to open PremierSuite is F3
+9 | 
+8 |
+9 | If that doesnt work, go to the "bindings" tab in the bakkesmod menu,
+9 | click "add", press desired keybind (check that keybind is not currently used),
+9 | double click the opening underneath the "add" button, and type:
+9 | togglemenu PremierSuite
+9 | Click save twice and check to make sure it is working.
+9 |
+9 |
+9 | If that doesnt work, try this button and rebind in the "keybinds" section of the GUI:
+0 | Open PremierSuite GUI | plugin load premiersuite; writeplugins; togglemenu premiersuite
