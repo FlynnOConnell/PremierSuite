@@ -14,12 +14,6 @@ std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
 
-//static inline std::string GetUserAgent()
-//{
-//	return "User-Agent: BPM;4;" + std::to_string(BAKKESMOD_PLUGIN_API_VERSION) + ";" + GetPlatform(myUniqueID.GetPlatform()) + ";" + myUniqueID.str() + ";";
-//}
-
-
 enum Mode
 {
 	CasualDuel = 1,
@@ -41,11 +35,9 @@ enum Mode
 	GodBallDoubles = 43
 };
 
-
 /*
 *  Workshop and Custom Map File Functions
 */
-
 
 /// <summary>Returns the lowercased string from the given string.</summary>
 /// <param name="str">String to change</param>
@@ -196,7 +188,6 @@ void PremierSuite::setPluginEnabled(bool newPluginEnabled)
 void PremierSuite::pluginEnabledChanged()
 {
 	const bool enabled = cvarManager->getCvar(enabledCvarName).getBoolValue();
-
 	if (enabled)
 	{
 		if (!hooked)
@@ -239,7 +230,6 @@ void PremierSuite::setDisablePrivate(bool newDisPrivate)
 	cvarManager->log("ps. disablePrivateCvarName has been set");
 
 }
-
 
 /*
  *  Instant Queue Functions
@@ -323,7 +313,6 @@ void PremierSuite::setDisableCasualQueue(bool newDisCasualQueue)
 	cvarManager->getCvar(disableCasualQCvarName).setValue(newDisCasualQueue);
 	cvarManager->log("ps. disableCasualQCvarName has been set");
 }
-
 
 /*
  *  Instant Freeplay Functions
@@ -474,7 +463,6 @@ void PremierSuite::delayedCustomTraining()
 	cvarManager->executeCommand("load_training " + training_code);
 }
 
-
 /*
  *  Instant Workshop Functions (Working, not integrated to ImGui yet)
  */
@@ -605,21 +593,14 @@ void PremierSuite::delayedExit()
  *  Keybind Functions
  */
 
-/// <summary>
-/// Change shortcut keybind: open Instant Suite GUI
-/// </summary>
-void PremierSuite::unbindKeybind()
-{
-	cvarManager->executeCommand("unbind \"" + cvarManager->getCvar("key_holder").getStringValue());
-	cvarManager->log("Unbound key: \"" + cvarManager->getCvar("key_holder").getStringValue() + "\"");
-}
 
 /// <summary>
 /// Change shortcut keybind: unbind desired key
 /// </summary>
-void PremierSuite::changeGuiKeybind()
+void PremierSuite::changeGuiKeybind(std::string newKeybind)
 {
-	cvarManager->executeCommand("bind \"" + cvarManager->getCvar("is_gui_keybind").getStringValue() + "\" \"togglemenu PremierSuite\"", true);
+	cvarManager->executeCommand("unbind \"" + cvarManager->getCvar("is_gui_keybind").getStringValue());
+	cvarManager->executeCommand("bind \"" + newKeybind + "\" \"togglemenu PremierSuite\"", true);
 	cvarManager->log("Changed the keybind for \"togglemenu PremierSuite\" to \"" + cvarManager->getCvar("is_gui_keybind").getStringValue() + "\"");
 }
 
@@ -778,14 +759,12 @@ void PremierSuite::onLoad()
 
 	//Keybind Cvars
 	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
-	cvarManager->registerCvar(keyholderCvarName, "", "Keybind for the gui");
 
 	cvarManager->loadCfg("bakkesmod/cfg/PremierSuite");
 
 	// Set the window bind to the default keybind if is not set.
 	if (!IsGUIWindowBound(GetMenuName())) {
 		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
-		
 	}
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {

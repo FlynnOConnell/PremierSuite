@@ -7,6 +7,7 @@
 #include "utils/io.h"
 #include <filesystem>
 #include "parser.h"
+
 //#include "IMGUI/imgui_searchablecombo.h" // Likely need to modify this to allow searching workshops/custom maps
 
 
@@ -87,7 +88,6 @@ private:
 	static constexpr const char* exitCvarName = "is_enableExit";
 
 	static constexpr const char* keybindCvarName = "is_gui_keybind";
-	static constexpr const char* keyholderCvarName = "key_holder";
 
 	static constexpr const char* trainingMapCvarName = "is_trainingMap";
 	static constexpr const char* customtrainingCvarName = "is_ctrainingMap";
@@ -132,9 +132,9 @@ private:
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
 	//std::wstring GetPlayerNickname(uint64_t uniqueId);							
-	void changeGuiKeybind();
-	void unbindKeybind();
-	void changePluginEnabledKeybind();
+	void changeGuiKeybind(std::string newKeybind);
+
+	//void changePluginEnabledKeybind();
 	void quickPluginEnabled();
 
 	// Window settings
@@ -153,10 +153,11 @@ public:
 
 private:
 	void SetupImGuiStyle();
-	void ShowStylesPopup();
-	void renderInstantSettingsTab();
-	void renderStylesTab();
+	void renderStyleEditorTab(ImGuiStyle* ref);
 	void renderKeybindsTab();
+	void renderSettingsTab();
+	
+	void renderMenu();
 	bool hooked = false;
 	bool enableCustomMaps = false;
 	bool enableWorkshopMaps = false;
