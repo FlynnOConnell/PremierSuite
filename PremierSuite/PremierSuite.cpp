@@ -704,8 +704,7 @@ void PremierSuite::logHookType(const char* const hookType) const
 }
 
 void PremierSuite::removeOldPlugin() { // disable deprecated predecessor plugin InstantTraining
-	cvarManager->executeCommand("unload instanttraining");
-	cvarManager->executeCommand("unload instantexit");
+	cvarManager->executeCommand("unload premiersuite");
 	cvarManager->executeCommand("writeplugins");
 }
 
