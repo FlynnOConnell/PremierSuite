@@ -132,7 +132,7 @@ private:
 
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
-	//std::wstring GetPlayerNickname(uint64_t uniqueId);							
+						
 	void changeGuiKeybind(std::string newKeybind);
 
 	//void changePluginEnabledKeybind();
@@ -182,7 +182,6 @@ private:
 		std::string packAuthor;
 		bool loaded = false;
 	};
-
 
 	std::map<std::string, PackInfo> allPacks;
 

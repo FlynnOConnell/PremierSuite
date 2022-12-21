@@ -4,7 +4,7 @@
 #include <fstream>
 #include <filesystem>
 #include "PremierSuite.h"
-
+#include <json/json.h>
 
 BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
@@ -13,7 +13,6 @@ std::filesystem::path PremierSuiteStylesFolder;
 std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-
 
 enum Mode
 {
@@ -36,9 +35,9 @@ enum Mode
 	GodBallDoubles = 43
 };
 
-/*
-*  Workshop and Custom Map File Functions
-*/
+//-----------------------------------------------------------------------------
+// File Helper Functions
+//-----------------------------------------------------------------------------
 
 /// <summary>Returns the lowercased string from the given string.</summary>
 /// <param name="str">String to change</param>
@@ -102,7 +101,6 @@ std::vector<std::filesystem::path> PremierSuite::IterateDirectory(const std::fil
 
 	return files;
 }
-
 
 /// <summary>Gets files from a certain directory.</summary>
 /// <remarks>These files can be filtered by if they end with certain file extensions.</remarks>
@@ -176,9 +174,10 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 	return workshopMaps;
 }
 
-/*
- *  Main Plugin Functions
- */
+//-----------------------------------------------------------------------------
+//--- Main Plugin Functions
+//-----------------------------------------------------------------------------
+
 
 void PremierSuite::setPluginEnabled(bool newPluginEnabled)
 {
@@ -232,9 +231,10 @@ void PremierSuite::setDisablePrivate(bool newDisPrivate)
 
 }
 
-/*
- *  Instant Queue Functions
- */
+//-----------------------------------------------------------------------------
+//--- Instant Queue + Delay Options
+//-----------------------------------------------------------------------------
+
 
 void PremierSuite::queue(ServerWrapper server, void* params, std::string eventName)
 {
@@ -315,9 +315,9 @@ void PremierSuite::setDisableCasualQueue(bool newDisCasualQueue)
 	cvarManager->log("ps. disableCasualQCvarName has been set");
 }
 
-/*
- *  Instant Freeplay Functions
- */
+//-----------------------------------------------------------------------------
+//--- Exit to Freeplay
+//-----------------------------------------------------------------------------
 
 void PremierSuite::launchTraining(ServerWrapper server, void* params, std::string eventName)
 {
@@ -396,9 +396,9 @@ void PremierSuite::delayedTraining()
 
 }
 
-/*
- *  Instant Custom Training Functions
- */
+//-----------------------------------------------------------------------------
+//--- Exit to Custom Training
+//-----------------------------------------------------------------------------
 
 void PremierSuite::launchCustomTraining(ServerWrapper server, void* params, std::string eventName)
 {
@@ -464,9 +464,9 @@ void PremierSuite::delayedCustomTraining()
 	cvarManager->executeCommand("load_training " + training_code);
 }
 
-/*
- *  Instant Workshop Functions (Working, not integrated to ImGui yet)
- */
+//-----------------------------------------------------------------------------
+//--- Exit to Workshop Map
+//-----------------------------------------------------------------------------
 
 void PremierSuite::launchWorkshop(ServerWrapper server, void* params, std::string eventName)
 {
@@ -528,10 +528,9 @@ void PremierSuite::delayedWorkshop()
 	//cvarManager->executeCommand("load_workshop " + currentMap);
 }
 
-
-/*
- *  Instant Exit Functions
- */
+//-----------------------------------------------------------------------------
+//--- Exit to Main Menu
+//-----------------------------------------------------------------------------
 
 void PremierSuite::exitGame(ServerWrapper server, void* params, std::string eventName)
 {
@@ -590,10 +589,9 @@ void PremierSuite::delayedExit()
 	cvarManager->executeCommand("unreal_command disconnect");
 }
 
-/*
- *  Keybind Functions
- */
-
+//-----------------------------------------------------------------------------
+//--- Keybind Helpers
+//-----------------------------------------------------------------------------
 
 /// <summary>
 /// Change shortcut keybind: unbind desired key
@@ -604,7 +602,6 @@ void PremierSuite::changeGuiKeybind(std::string newKeybind)
 	cvarManager->executeCommand("bind \"" + newKeybind + "\" \"togglemenu PremierSuite\"", true);
 	cvarManager->log("Changed the keybind for \"togglemenu PremierSuite\" to \"" + cvarManager->getCvar("is_gui_keybind").getStringValue() + "\"");
 }
-
 
 /// <summary>
 /// Quick-change if plugin is enabled, sets cvar to opposite it's current value 
@@ -642,10 +639,9 @@ bool IsGUIWindowBound(const std::string& windowName)
 	return false;
 }
 
-
-/*
- * Server Functions 
- */
+//-----------------------------------------------------------------------------
+//--- Server Hooks
+//-----------------------------------------------------------------------------
 
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
@@ -712,7 +708,10 @@ void PremierSuite::onLoad()
 {
 	cvarManager->log("PremierSuite loaded!");
 
-	// Folder Setup
+	//-----------------------------------------------------------------------------
+	// File Helper Cvars
+	//-----------------------------------------------------------------------------
+
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
 	std::filesystem::path BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
 	if (!exists(BakkesModCrashesFolder)) {
@@ -737,7 +736,6 @@ void PremierSuite::onLoad()
 	//-----------------------------------------------------------------------------
 	// Persistent Cvars (see https://wiki.bakkesplugins.com/code_snippets/persistent_storage/)
 	//-----------------------------------------------------------------------------
-
 
 	cvarManager->registerCvar(enabledCvarName, "1", "Determines whether Instant Suite is enabled.").addOnValueChanged(std::bind(&PremierSuite::pluginEnabledChanged, this));
 	cvarManager->registerCvar(disablePrivateCvarName, "0", "Disable plugin during Private, Tournament, and Heatseeker matches.");
@@ -774,19 +772,19 @@ void PremierSuite::onLoad()
 	//Keybind Cvars
 	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
 
-
 	//Styles Cvar
 	stylesDirPath = std::make_shared<std::string>();
 	cvarManager->registerCvar("styles_path", CUSTOM_MAPS_PATH.string(),
 		"Default path for your custom maps directory").bindTo(customMapDirPath);
 
-
 	// Set the window bind to the default keybind if is not set.
-	if (!IsGUIWindowBound(GetMenuName())) {
+	if (!IsGUIWindowBound(GetMenuName())) 
+	{
 		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
 	}
 
-	gameWrapper->SetTimeout([this](GameWrapper* gw) {
+	gameWrapper->SetTimeout([this](GameWrapper* gw) 
+		{
 		this->removeOldPlugin();
 		}, 10);
 

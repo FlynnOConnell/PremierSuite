@@ -420,9 +420,6 @@ void PremierSuite::OpenStyleEditorWindow(ImGuiStyle* ref)
 				ImGui::ColorEdit4("##color", (float*)&style.Colors[i], ImGuiColorEditFlags_AlphaBar | alpha_flags);
 				if (memcmp(&style.Colors[i], &ref->Colors[i], sizeof(ImVec4)) != 0)
 				{
-					// Tips: in a real user application, you may want to merge and use an icon font into the main font,
-					// so instead of "Save"/"Revert" you'd use icons!
-					// Read the FAQ and docs/FONTS.md about using icon fonts. It's really easy and super convenient!
 					ImGui::SameLine(0.0f, style.ItemInnerSpacing.x); if (ImGui::Button("Save")) { ref->Colors[i] = style.Colors[i]; }
 					ImGui::SameLine(0.0f, style.ItemInnerSpacing.x); if (ImGui::Button("Revert")) { style.Colors[i] = ref->Colors[i]; }
 				}
@@ -432,7 +429,6 @@ void PremierSuite::OpenStyleEditorWindow(ImGuiStyle* ref)
 			}
 			ImGui::PopItemWidth();
 			ImGui::EndChild();
-
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
