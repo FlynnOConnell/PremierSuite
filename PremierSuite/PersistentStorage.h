@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <filesystem>
 #include <map>
-
+#include "PremierSuite.h"
 
 class PersistentStorage
 {

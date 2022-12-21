@@ -6,7 +6,6 @@
 #include "utils/parser.h"
 #include "utils/io.h"
 #include <filesystem>
-#include "parser.h"
 
 //#include "IMGUI/imgui_searchablecombo.h" // Likely need to modify this to allow searching workshops/custom maps
 
@@ -20,8 +19,8 @@ extern std::filesystem::path BakkesModConfigFolder;
 extern std::filesystem::path PremierSuiteDataFolder;
 extern std::filesystem::path RocketLeagueExecutableFolder;
 
-#define BINDS_FILE_PATH        (BakkesModConfigFolder / "binds.cfg")
 #define CONFIG_FILE_PATH       (BakkesModConfigFolder / "config.cfg")
+#define BINDS_FILE_PATH        (BakkesModConfigFolder / "binds.cfg")
 #define COOKED_PC_CONSOLE_PATH (RocketLeagueExecutableFolder / "../../TAGame/CookedPCConsole")
 #define CUSTOM_MAPS_PATH       (COOKED_PC_CONSOLE_PATH / "mods")
 #define COPIED_MAPS_PATH       (COOKED_PC_CONSOLE_PATH / "PremierSuite")
@@ -37,6 +36,7 @@ class PremierSuite : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod
 public:
 	// Help return lowercase if need be for epic games workshop integration 
 	static std::string toLower(std::string str, bool changeInline = false);
+
 
 private:
 	// General Declaration
@@ -78,7 +78,6 @@ private:
 
 	SteamID mySteamID = { 0 };
 
-	// Cvar Declaration
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
 	static constexpr const char* enabledCvarName = "is_enablePlugin";
 	static constexpr const char* trainingCvarName = "is_enableTraining";
@@ -104,9 +103,11 @@ private:
 	static constexpr const char* newPackCodeCvar = "newPackCodeCvar";
 	static constexpr const char* newPackAuthorCvar = "newPackAuthorCvar";
 
+	
 
-
+	
 	// File Helpers
+	std::shared_ptr<std::string> stylesDirPath;
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::shared_ptr<std::string> customMapDirPath;
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath,
@@ -140,7 +141,7 @@ private:
 	// Window settings
 	bool isWindowOpen = false;
 	bool isMinimized = false;
-	std::string menuTitle = "PremierSuite";
+	std::string menuTitle = "premiersuite";
 public:
 	virtual void Render();
 	virtual std::string GetMenuName();
@@ -152,14 +153,14 @@ public:
 	virtual void OnClose();
 
 private:
-
-	void renderStyleEditorTab(ImGuiStyle* ref);
+	void SaveStyle();
+	void OpenStyleEditorWindow(ImGuiStyle* ref);
 	void renderKeybindsTab();
 	void renderSettingsTab();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 	void StyleColorsCustom();
-	bool showStyleCombo(const char* label);
+	bool renderStyleCombo(const char* label);
 	bool hooked = false;
 	bool enableCustomMaps = false;
 	bool enableWorkshopMaps = false;

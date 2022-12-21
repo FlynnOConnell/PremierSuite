@@ -95,6 +95,11 @@
 #endif
 #endif
 
+extern std::filesystem::path PremierSuiteDataFolder;
+
+#define STYLES_FOLDER_PATH       (PremierSuiteDataFolder / "styles")
+
+
 extern bool ImGuiSaveStyle(const char* filename, const ImGuiStyle& style);
 extern bool ImGuiLoadStyle(const char* filename, ImGuiStyle& style);
 
@@ -123,6 +128,33 @@ void* GImGuiDemoMarkerCallbackUserData = NULL;
 #define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
 
 constexpr auto DEBUG = true;
+
+void PremierSuite::SaveStyle() 
+{
+	static ImGuiStyle style = ImGui::GetStyle();
+	ImGui::BeginChild("Save");
+	ImGui::Text("\n");
+	ImGui::Text("Save the current style:");
+	static bool saveCurrentStyle = false;
+	saveCurrentStyle = ImGui::Button("Save Current Style");
+
+	char fullfilepath[100];
+	std::string temppath = STYLES_FOLDER_PATH.string();
+	const char* stylesname = "myimguistyle.style";
+	strcpy(fullfilepath, temppath.c_str());
+	strcat(fullfilepath, stylesname);
+	if (saveCurrentStyle) {
+		if (!ImGuiSaveStyle(fullfilepath, ImGui::GetStyle())) {
+			fprintf(stderr, "Warning: \"./myimgui.style\" cannot be saved.\n");
+		}
+		else {
+			ImGuiSaveStyle(fullfilepath, style);
+			cvarManager->log("Saved");
+		}
+	}
+	ImGui::EndChild();
+}
+
 
 /// <summary>ImGui widgets to render.</summary>
 void PremierSuite::Render()
@@ -175,7 +207,7 @@ void PremierSuite::renderMenu()
 
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	if (show_app_style_editor) { ImGui::Begin("PremierSuite Style Editor", &show_app_style_editor); renderStyleEditorTab(&style); ImGui::End(); }
+	if (show_app_style_editor) { ImGui::Begin("PremierSuite Style Editor", &show_app_style_editor); OpenStyleEditorWindow(&style); ImGui::End(); }
 	if (show_app_about) { renderAboutWindow(&show_app_about); }
 	if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
 
@@ -202,24 +234,24 @@ void PremierSuite::renderMenu()
 	if (no_background)      window_flags |= ImGuiWindowFlags_NoBackground;
 	if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
 
-		if (ImGui::BeginMenu("Tools"))
-		{
-			ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
-			ImGui::MenuItem("Console", NULL, &show_app_console);
-			ImGui::MenuItem("Log", NULL, &show_app_log);
-			ImGui::EndMenu();
-		}
-		//if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
-		if (ImGui::BeginMenu("Metrics"))
-		{
-			const bool has_debug_tools = true;
+	if (ImGui::BeginMenu("Tools"))
+	{
+		ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
+		ImGui::MenuItem("Console", NULL, &show_app_console);
+		ImGui::MenuItem("Log", NULL, &show_app_log);
+		ImGui::EndMenu();
+	}
+	//if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
+	if (ImGui::BeginMenu("Metrics"))
+	{
+		const bool has_debug_tools = true;
 
-			ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics, has_debug_tools);
-			ImGui::MenuItem("About PremierSuite", NULL, &show_app_about);
-			ImGui::EndMenu();
-		}
-		ImGui::Indent(5);
-		ImGui::Spacing();
+		ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics, has_debug_tools);
+		ImGui::MenuItem("About PremierSuite", NULL, &show_app_about);
+		ImGui::EndMenu();
+	}
+	ImGui::Indent(5);
+	ImGui::Spacing();
 }
 
 /// <summary> Renders keybinds tab for changing GUI keybinds. </summary>
@@ -260,21 +292,18 @@ void PremierSuite::renderKeybindsTab()
 }
 
 /// <summary> Renders configurable style editor. </summary>
-void PremierSuite::renderStyleEditorTab(ImGuiStyle* ref)
+void PremierSuite::OpenStyleEditorWindow(ImGuiStyle* ref)
 {
+
 	IMGUI_DEMO_MARKER("Style Editor");
-
-	ImGuiStyle& style = ImGui::GetStyle();
+	static ImGuiStyle style;
 	static ImGuiStyle ref_saved_style;
-
-	static bool init = true;
-	if (init && ref == NULL)
-		ref_saved_style = style;
-	init = false;
 	if (ref == NULL)
-		ref = &ref_saved_style;
+		ImGuiStyle& style = ImGui::GetStyle();
+	if (ref)
+		ImGuiStyle style = *ref;
 
-	if (ImGui::ShowStyleSelector("Colors##Selector"))
+	if (renderStyleCombo("Colors##Selector"))
 		ref_saved_style = style;
 
 	// Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0f or 1.0f)
@@ -288,6 +317,9 @@ void PremierSuite::renderStyleEditorTab(ImGuiStyle* ref)
 
 	// Save/Revert button
 	if (ImGui::Button("Save Ref"))
+		*ref = ref_saved_style = style;
+	ImGui::SameLine();
+	if (ImGui::Button("Save To File"))
 		*ref = ref_saved_style = style;
 	ImGui::SameLine();
 	if (ImGui::Button("Revert Ref"))
@@ -411,6 +443,7 @@ void PremierSuite::renderStyleEditorTab(ImGuiStyle* ref)
 /// <summary> Renders main GUI settings. </summary>
 void PremierSuite::renderSettingsTab()
 {
+
 	if (ImGui::BeginTabItem("Settings"))
 	{
 		ImGui::Text(
@@ -707,7 +740,7 @@ void PremierSuite::renderAboutWindow(bool* p_open)
 }
 
 /// <summary> render styles combo selector. </summary>
-bool PremierSuite::showStyleCombo(const char* label)
+bool PremierSuite::renderStyleCombo(const char* label)
 {
 	static int style_idx = -1;
 	if (ImGui::Combo(label, &style_idx, "Classic\0Dark\0Light\0MyFavorite\0"))
@@ -724,7 +757,7 @@ bool PremierSuite::showStyleCombo(const char* label)
 	return false;
 }
 
-/// <summary> Renders main GUI settings. </summary>
+/// <summary> A style I personally enjoy. </summary>
 void PremierSuite::StyleColorsCustom()
 {
 	ImGuiStyle* style = &ImGui::GetStyle();
@@ -1258,7 +1291,7 @@ static void ShowExampleAppConsole(bool* p_open)
 /// <returns>The menu name</returns>
 std::string PremierSuite::GetMenuName()
 {
-	return "PremierSuite";
+	return "premiersuite";
 }
 
 /// <summary>Gets the menu title.</summary>

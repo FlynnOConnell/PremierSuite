@@ -9,6 +9,7 @@
 BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
 std::filesystem::path BakkesModConfigFolder;
+std::filesystem::path PremierSuiteStylesFolder;
 std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
@@ -709,21 +710,35 @@ void PremierSuite::removeOldPlugin() {
 
 void PremierSuite::onLoad()
 {
+	cvarManager->log("PremierSuite loaded!");
 
+	// Folder Setup
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
 	std::filesystem::path BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
 	if (!exists(BakkesModCrashesFolder)) {
 		std::filesystem::create_directory(BakkesModCrashesFolder);
 	}
-	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"PremierSuite";
+	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"premiersuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
-		cvarManager->log("Data folder greated:" + PremierSuiteDataFolder.u8string());
+		cvarManager->log("Data folder created:" + PremierSuiteDataFolder.u8string());
 	}
+	std::filesystem::path PremierSuiteStylesFolder = gameWrapper->GetDataFolder() / L"premiersuite" / L"styles";
+	if (!exists(PremierSuiteStylesFolder)) {
+		std::filesystem::create_directory(PremierSuiteStylesFolder);
+		cvarManager->log("Styles folder created:" + PremierSuiteStylesFolder.u8string());
+	}
+	if (exists(PremierSuiteStylesFolder)) {
+		cvarManager->log("Styles folder found:" + PremierSuiteStylesFolder.u8string());
+	}
+
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
-	//Main Plugin Cvars
-	cvarManager->log("Plugin loaded!");
+	//-----------------------------------------------------------------------------
+	// Persistent Cvars (see https://wiki.bakkesplugins.com/code_snippets/persistent_storage/)
+	//-----------------------------------------------------------------------------
+
+
 	cvarManager->registerCvar(enabledCvarName, "1", "Determines whether Instant Suite is enabled.").addOnValueChanged(std::bind(&PremierSuite::pluginEnabledChanged, this));
 	cvarManager->registerCvar(disablePrivateCvarName, "0", "Disable plugin during Private, Tournament, and Heatseeker matches.");
 	cvarManager->registerCvar(DelayCvarName, "0", "Seconds to wait before loading into training mode.");
@@ -759,7 +774,12 @@ void PremierSuite::onLoad()
 	//Keybind Cvars
 	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
 
-	cvarManager->loadCfg("bakkesmod/cfg/PremierSuite");
+
+	//Styles Cvar
+	stylesDirPath = std::make_shared<std::string>();
+	cvarManager->registerCvar("styles_path", CUSTOM_MAPS_PATH.string(),
+		"Default path for your custom maps directory").bindTo(customMapDirPath);
+
 
 	// Set the window bind to the default keybind if is not set.
 	if (!IsGUIWindowBound(GetMenuName())) {

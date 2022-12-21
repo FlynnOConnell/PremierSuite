@@ -212,21 +212,8 @@ bool ImGuiLoadStyle(const char* filename, ImGuiStyle& style)
                 fprintf(stderr, "Warning in ImGui::LoadStyle(\"%s\"): skipped [%s] (unknown field).\n", filename, name);
                 break;
             }
-            /*
-            // Same reference code from <imgui.cpp> to help parsing
-            float x, y;
-            int i;
-            if (sscanf(line_start, "Pos=%f,%f", &x, &y) == 2)
-                settings->Pos = ImVec2(x, y);
-            else if (sscanf(line_start, "Size=%f,%f", &x, &y) == 2)
-                settings->Size = ImMax(ImVec2(x, y), g.Style.WindowMinSize);
-            else if (sscanf(line_start, "Collapsed=%d", &i) == 1)
-                settings->Collapsed = (i != 0);
-            */
-            //---------------------------------------------------------------------------------    
-            name[0] = '\0'; // mandatory
+            name[0] = '\0'; // to allow addition into combo box
         }
-
         line_start = line_end + 1;
     }
 
