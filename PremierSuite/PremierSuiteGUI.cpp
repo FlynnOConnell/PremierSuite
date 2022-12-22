@@ -95,6 +95,7 @@
 #endif
 #endif
 
+
 extern std::filesystem::path PremierSuiteDataFolder;
 
 #define STYLES_FOLDER_PATH       (PremierSuiteDataFolder / "styles")
@@ -261,30 +262,38 @@ void PremierSuite::renderKeybindsTab()
 	{
 		if (ImGui::BeginChild("Keybinds"))
 		{
+			ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
 			ImGui::Text(
 				"Easily Change keybinds to whatever button you'd like.\n"
-				"Join discord for questions and feature requests.\n"
 			);
 			ImGui::Separator();
 			ImGui::Indent(5);
+			ImGui::Spacing();
+			ImGui::Spacing();
 			ImGui::Spacing();
 
 			static char keybind[128] = "";
 			static auto keybindCvar = cvarManager->getCvar(keybindCvarName);
 			std::string cvarName = keybindCvar.getStringValue();
-			
-			ImGui::Text("Current keybind: % s\n", cvarName.c_str());
 
-			if (ImGui::InputTextWithHint("Desired keybind", "Type desired keybind here", keybind, IM_ARRAYSIZE(keybind))) {
-				
-			}
-			if (ImGui::Button("Change GUI Keybind")){
+			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
+			ImGui::InputTextWithHint("", "Type out your desired keybind", keybind, IM_ARRAYSIZE(keybind), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
+			ImGui::PopItemWidth();
 
+			if (ImGui::Button("Change GUI Keybind"))
+			{
 				cvarManager->removeBind(keybindCvar.getStringValue());
 				cvarManager->setBind(keybind, "togglemenu " + GetMenuName());
 				keybindCvar.setValue(keybind);
-				cvarManager->executeCommand("writeconfig", false);
+				cvarManager->executeCommand("writeconfig", true);
 			}
+			ImGui::Separator();
+			ImGui::Indent(5);
+			ImGui::Spacing();
+
+			ImGui::Text("Current GUI keybind: % s\n", cvarName.c_str());
+
 			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
@@ -478,11 +487,16 @@ void PremierSuite::renderSettingsTab()
 		auto queueEnabled = queueCvar.getBoolValue();
 
 		ImGui::Text("Instant Queue Settings");
-		if (ImGui::Checkbox("Enable", &queueEnabled)) {
+		if (ImGui::Checkbox("", &queueEnabled)) {
 			queueCvar.setValue(queueEnabled);
 			cvarManager->executeCommand("writeconfig", false);
 			cvarManager->log("Instant Queue Enabled!");
 		}
+		ImGui::SameLine();
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Enable/Disable the plugin and all of its functionality.\n"
+				"You can also bind this to a key in the Keybinds tab!.\n\n");
 
 		// DELAYED QUEUE
 		static auto queueDelayCvar = cvarManager->getCvar(qDelayCvarName);
@@ -490,14 +504,15 @@ void PremierSuite::renderSettingsTab()
 
 		ImGui::SameLine();
 
+		ImGui::PushItemWidth( ImGui::GetContentRegionAvail().x * 0.5f);
 		ImGui::PushID("queueDelayTime");
-		if (ImGui::SliderFloat("Delay", &queueDelayTime, 0.0f, 20.0f, "%.1f secs")) {
+		if (ImGui::SliderFloat("", &queueDelayTime, 0.0f, 20.0f, "Delay: %.1f s")) {
 			queueDelayCvar.setValue(queueDelayTime);
 			cvarManager->executeCommand("writeconfig", false);
 			cvarManager->log("Change Queue Delay Timer");
 		}
 		ImGui::PopID();
-
+		ImGui::PopItemWidth();
 
 		// DISABLE Q FOR CASUAL
 		static auto disableCasualQueueCvar = cvarManager->getCvar(disableCasualQCvarName);
@@ -522,18 +537,25 @@ void PremierSuite::renderSettingsTab()
 		}
 		ImGui::SameLine();
 
-
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f);
 		if (ImGui::SliderFloat("Delay", &delayTime, 0.0f, 20.0f, "%.1f secs")) {
 			delayCvar.setValue(delayTime);
 			cvarManager->log("Delay Set");
 		}
+		ImGui::PopItemWidth();
 
-		ImGui::Text("Auto-leave game options:");
+		//-----------------------------------------------------------------------------
+		// Auto-Exit
+		//-----------------------------------------------------------------------------
 
+		ImGui::Text("Auto-exit on game end");
 		ImGui::SameLine();
 		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("Selection works in order, top to bottom, only if plugin is enabled.");
+			ImGui::SetTooltip("Exit to desired location immediately, or with delay.\n"
+							  "Current options: Main-Menu, Freeplay, Custom Training Pack.\n"
+							  "Workshops, private game modes and specialty game modes are on the way.\n\n"
+							  "*If multiple exit-options are enabled, the uppmost most selection will be executed.");
 		ImGui::Separator();
 		ImGui::Spacing();
 
@@ -549,7 +571,6 @@ void PremierSuite::renderSettingsTab()
 			}
 			ImGui::TreePop();
 		}
-
 		ImGui::Separator();
 		ImGui::Spacing();
 

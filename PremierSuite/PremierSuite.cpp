@@ -5,11 +5,11 @@
 #include <filesystem>
 #include "PremierSuite.h"
 #include <json/json.h>
+#include <Windows.h>
 
 BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
 std::filesystem::path BakkesModConfigFolder;
-std::filesystem::path PremierSuiteStylesFolder;
 std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
@@ -25,15 +25,36 @@ enum Mode
 	RankedDoubles = 11,
 	RankedSoloStandard = 12,
 	RankedStandard = 13,
-	MutatorMashup = 14,
 	Tournament = 22,
 	RankedHoops = 27,
 	RankedRumble = 28,
 	RankedDropshot = 29,
 	RankedSnowday = 30,
-	GodBall = 38,
-	GodBallDoubles = 43
 };
+
+/// <summary>Debug type-helper. Returns the type of the parameter passed.</summary>
+/// <typeparam name="T">Parameter to check.</typeparam>
+/// <returns>Type of the parameter</returns>
+template <typename T>
+constexpr auto type_name() {
+	std::string_view name, prefix, suffix;
+#ifdef __clang__
+	name = __PRETTY_FUNCTION__;
+	prefix = "auto type_name() [T = ";
+	suffix = "]";
+#elif defined(__GNUC__)
+	name = __PRETTY_FUNCTION__;
+	prefix = "constexpr auto type_name() [with T = ";
+	suffix = "]";
+#elif defined(_MSC_VER)
+	name = __FUNCSIG__;
+	prefix = "auto __cdecl type_name<";
+	suffix = ">(void)";
+#endif
+	name.remove_prefix(prefix.size());
+	name.remove_suffix(suffix.size());
+	return name;
+}
 
 //-----------------------------------------------------------------------------
 // File Helper Functions
@@ -178,7 +199,6 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 //--- Main Plugin Functions
 //-----------------------------------------------------------------------------
 
-
 void PremierSuite::setPluginEnabled(bool newPluginEnabled)
 {
 	cvarManager->getCvar(enabledCvarName).setValue(newPluginEnabled);
@@ -234,7 +254,6 @@ void PremierSuite::setDisablePrivate(bool newDisPrivate)
 //-----------------------------------------------------------------------------
 //--- Instant Queue + Delay Options
 //-----------------------------------------------------------------------------
-
 
 void PremierSuite::queue(ServerWrapper server, void* params, std::string eventName)
 {
@@ -347,9 +366,6 @@ void PremierSuite::launchTraining(ServerWrapper server, void* params, std::strin
 		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
 			return;
 		}
-		else if ((playlist == Private || playlist == Tournament || playlist == GodBall || playlist == GodBallDoubles) && disablePrivate) {
-			return;
-		}
 		else {
 			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedTraining, this), totalTrainingDelayTime);
 			cvarManager->log("ps. settimeout(delayedTraining, totalTrainingDelayTime executed");
@@ -425,9 +441,6 @@ void PremierSuite::launchCustomTraining(ServerWrapper server, void* params, std:
 		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
 			return;
 		}
-		else if ((playlist == Private || playlist == Tournament || playlist == GodBall || playlist == GodBallDoubles) && disablePrivate) {
-			return;
-		}
 		else {
 			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedCustomTraining, this), totalCustomTrainingDelayTime);
 		}
@@ -491,9 +504,6 @@ void PremierSuite::launchWorkshop(ServerWrapper server, void* params, std::strin
 		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
 
 		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
-			return;
-		}
-		else if ((playlist == Private || playlist == Tournament || playlist == GodBall || playlist == GodBallDoubles) && disablePrivate) {
 			return;
 		}
 		else {
@@ -700,13 +710,14 @@ void PremierSuite::logHookType(const char* const hookType) const
 }
 
 void PremierSuite::removeOldPlugin() {
-	cvarManager->executeCommand("unload premiersuite");
+	cvarManager->executeCommand("plugin unload instantsuite");
 	cvarManager->executeCommand("writeplugins");
 }
 
 void PremierSuite::onLoad()
 {
-	cvarManager->log("PremierSuite loaded!");
+
+	_globalCvarManager = cvarManager;
 
 	//-----------------------------------------------------------------------------
 	// File Helper Cvars
@@ -721,14 +732,6 @@ void PremierSuite::onLoad()
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
 		cvarManager->log("Data folder created:" + PremierSuiteDataFolder.u8string());
-	}
-	std::filesystem::path PremierSuiteStylesFolder = gameWrapper->GetDataFolder() / L"premiersuite" / L"styles";
-	if (!exists(PremierSuiteStylesFolder)) {
-		std::filesystem::create_directory(PremierSuiteStylesFolder);
-		cvarManager->log("Styles folder created:" + PremierSuiteStylesFolder.u8string());
-	}
-	if (exists(PremierSuiteStylesFolder)) {
-		cvarManager->log("Styles folder found:" + PremierSuiteStylesFolder.u8string());
 	}
 
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
@@ -772,16 +775,15 @@ void PremierSuite::onLoad()
 	//Keybind Cvars
 	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
 
-	//Styles Cvar
-	stylesDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("styles_path", CUSTOM_MAPS_PATH.string(),
-		"Default path for your custom maps directory").bindTo(customMapDirPath);
-
 	// Set the window bind to the default keybind if is not set.
-	if (!IsGUIWindowBound(GetMenuName())) 
+	if (!IsGUIWindowBound(GetMenuName()))
 	{
+		cvarManager->log("GUI keybind not bound. Binding to F3");
 		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
 	}
+	else {
+		cvarManager->log("GUI keybind bound. Binding to F3");
+	};
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) 
 		{
