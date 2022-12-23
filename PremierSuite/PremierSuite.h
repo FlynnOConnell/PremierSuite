@@ -2,17 +2,22 @@
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
+#include "libs/includes/nlohmann-JSON/json.hpp"
 #include "version.h"
 #include "utils/parser.h"
 #include "utils/io.h"
 #include <filesystem>
+#include "PersistentStorage.h"
+
+using json = nlohmann::json;
+
 
 //#include "IMGUI/imgui_searchablecombo.h" // Likely need to modify this to allow searching workshops/custom maps
 
 
 constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
 
-// Default Keybinds
+// Default Keybind
 constexpr const char* DEFAULT_GUI_KEYBIND = "F3";
 
 extern std::filesystem::path BakkesModConfigFolder;
@@ -27,6 +32,7 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 #define WORKSHOP_MAPS_PATH     (RocketLeagueExecutableFolder / "../../../../workshop/content/252950") //Generally C:\Program Files (x86)\Steam\steamapps\workshop\content\252950
 
 
+
 class PremierSuite : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
 {
 	std::shared_ptr<bool> enabled;
@@ -36,9 +42,13 @@ class PremierSuite : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod
 public:
 	// Help return lowercase if need be for epic games workshop integration 
 	static std::string toLower(std::string str, bool changeInline = false);
-
+	std::shared_ptr<std::string> globalKeybind;
 
 private:
+
+	void getKeybind();
+	void getEnabled();
+	
 	// General Declaration
 	void pluginEnabledChanged();
 	void launchCustomTraining(ServerWrapper caller, void* params, std::string eventName);
@@ -72,40 +82,37 @@ private:
 	void setWorkshopEnabled(bool newWorkshopEnabled);
 	void setExitEnabled(bool newExitEnabled);
 
-
-
 	int rank_nb = 23;
 
 	SteamID mySteamID = { 0 };
 
+	static constexpr const char* pluginEnabled = "1";
+	static constexpr const char* guiKeybind = "F5";
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
-	static constexpr const char* enabledCvarName = "is_enablePlugin";
-	static constexpr const char* trainingCvarName = "is_enableTraining";
-	static constexpr const char* ctrainingCvarName = "is_enableCTraining";
-	static constexpr const char* wtrainingCvarName = "is_enableWorkshop";
-	static constexpr const char* queueCvarName = "is_enableQueue";
-	static constexpr const char* exitCvarName = "is_enableExit";
+	static constexpr const char* enabledCvarName = "ps_enablePlugin";
+	static constexpr const char* trainingCvarName = "ps_enableTraining";
+	static constexpr const char* ctrainingCvarName = "ps_enableCTraining";
+	static constexpr const char* wtrainingCvarName = "ps_enableWorkshop";
+	static constexpr const char* queueCvarName = "ps_enableQueue";
+	static constexpr const char* exitCvarName = "ps_enableExit";
 
-	static constexpr const char* keybindCvarName = "is_gui_keybind";
+	static constexpr const char* trainingMapCvarName = "ps_trainingMap";
+	static constexpr const char* customtrainingCvarName = "ps_ctrainingMap";
+	static constexpr const char* workshopCvarName = "ps_workshopMap";
 
-	static constexpr const char* trainingMapCvarName = "is_trainingMap";
-	static constexpr const char* customtrainingCvarName = "is_ctrainingMap";
-	static constexpr const char* workshopCvarName = "is_workshopMap";
+	static constexpr const char* DelayCvarName = "ps_Delay";
+	static constexpr const char* qDelayCvarName = "ps_QDelay";
 
-	static constexpr const char* DelayCvarName = "is_Delay";
-	static constexpr const char* qDelayCvarName = "is_QDelay";
-
-	static constexpr const char* disableCasualQCvarName = "is_QBypassCasual";
-	static constexpr const char* disableCasualCvarName = "is_bypassCasual";
-	static constexpr const char* disablePrivateCvarName = "is_bypassPrivate";
+	static constexpr const char* disableCasualQCvarName = "ps_QBypassCasual";
+	static constexpr const char* disableCasualCvarName = "ps_bypassCasual";
+	static constexpr const char* disablePrivateCvarName = "ps_bypassPrivate";
 
 	static constexpr const char* newPackNameCvar = "newPackNameCvar";
 	static constexpr const char* newPackCodeCvar = "newPackCodeCvar";
 	static constexpr const char* newPackAuthorCvar = "newPackAuthorCvar";
 
-	
+	std::vector<std::string> GetGUIKeyFromBindsConfig(const std::string windowName, bool log);
 
-	
 	// File Helpers
 	std::shared_ptr<std::string> stylesDirPath;
 	std::shared_ptr<std::string> workshopMapDirPath;
@@ -132,8 +139,6 @@ private:
 
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
-						
-	void changeGuiKeybind(std::string newKeybind);
 
 	//void changePluginEnabledKeybind();
 	void quickPluginEnabled();
@@ -142,6 +147,7 @@ private:
 	bool isWindowOpen = false;
 	bool isMinimized = false;
 	std::string menuTitle = "premiersuite";
+	std::shared_ptr<PersistentStorage> _persistentStorage;
 public:
 	virtual void Render();
 	virtual std::string GetMenuName();
@@ -153,7 +159,7 @@ public:
 	virtual void OnClose();
 
 private:
-	void SaveStyle();
+
 	void OpenStyleEditorWindow(ImGuiStyle* ref);
 	void renderKeybindsTab();
 	void renderSettingsTab();
@@ -161,7 +167,10 @@ private:
 	void renderAboutWindow(bool* p_open);
 	void StyleColorsCustom();
 	bool renderStyleCombo(const char* label);
+
+	void handleKeybindCvar();
 	bool hooked = false;
+	int GetBoundConfigKeybinds();
 	bool enableCustomMaps = false;
 	bool enableWorkshopMaps = false;
 	bool refreshCustomMapPaths = true;

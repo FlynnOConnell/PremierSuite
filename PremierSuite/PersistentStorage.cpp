@@ -32,16 +32,21 @@ PersistentStorage::~PersistentStorage()
 void PersistentStorage::WritePersistentStorage()
 {
 	std::ofstream out(storage_file_);
-	//LOG("PersistentStorage: Writing to file");
+	LOG("PersistentStorage: Writing to file {}", storage_file_);
 	for (const auto& [cvar, cvar_cache_item] : cvar_cache_)
 	{
 		out << fmt::format("{} \"{}\" //{}\n", cvar, cvar_cache_item.value, cvar_cache_item.description);
 	}
 }
 
+//inline bool PersistentStorage::CheckExists(const std::string& filepath)
+//{
+//	return std::filesystem::exists(filepath);
+//}
+
 void PersistentStorage::Load()
 {
-	LOG("PersistentStorage: Loading the persistent storage cfg");
+	LOG("PersistentStorage: Loading the persistent storage cfg: {}", storage_file_.string());
 	cv_->loadCfg(storage_file_.string());
 	loaded_ = true;
 }
@@ -88,7 +93,7 @@ void PersistentStorage::AddCVar(const std::string& s)
 
 std::filesystem::path PersistentStorage::GetStorageFilePath(const std::shared_ptr<GameWrapper>& gw, std::string file_name)
 {
-	return gw->GetBakkesModPath() / "cfg" / file_name.append(".cfg");
+	return gw->GetBakkesModPath() / "cfg" / file_name.append(".cfg");	
 }
 
 void PersistentStorage::OnPersistentCvarChanged(const std::string& old, CVarWrapper changed_cvar)

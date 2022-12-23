@@ -1,7 +1,6 @@
 ﻿#pragma once
 #include <filesystem>
 #include <map>
-#include "PremierSuite.h"
 
 class PersistentStorage
 {
@@ -31,6 +30,12 @@ public:
     /// Loads the cvar values from disk
     /// </summary>
     void Load();
+
+    /// <summary>
+    /// Check if the cfg file exists
+    /// <param name="filepath">full path with filename + suffix</param>
+    /// </summary>
+    //inline bool CheckExists(const std::string& filepath);
 
 	/// <summary>
 	/// Registers a cvar with bakkesmod in addition to adding it to the list of persistent cvars.

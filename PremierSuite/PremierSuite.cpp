@@ -2,10 +2,13 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <Windows.h>
 #include <filesystem>
 #include "PremierSuite.h"
 #include <json/json.h>
-#include <Windows.h>
+#include "PersistentStorage.h"
+
+#define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
 BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
@@ -13,6 +16,8 @@ std::filesystem::path BakkesModConfigFolder;
 std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
+
+std::shared_ptr<int> numKeybinds;
 
 enum Mode
 {
@@ -59,6 +64,16 @@ constexpr auto type_name() {
 //-----------------------------------------------------------------------------
 // File Helper Functions
 //-----------------------------------------------------------------------------
+
+std::vector<std::string> split(const std::string& s, char delim) {
+	std::vector<std::string> elems;
+	std::stringstream ss(s);
+	std::string item;
+	while (getline(ss, item, delim)) {
+		elems.push_back(item);
+	}
+	return elems;
+}
 
 /// <summary>Returns the lowercased string from the given string.</summary>
 /// <param name="str">String to change</param>
@@ -201,13 +216,14 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 
 void PremierSuite::setPluginEnabled(bool newPluginEnabled)
 {
-	cvarManager->getCvar(enabledCvarName).setValue(newPluginEnabled);
+	cvarManager->getCvar("ps_enablePlugin").setValue(newPluginEnabled);
 	cvarManager->log("ps. Plugin Enabled Cvar has been set");
 }
 
 void PremierSuite::pluginEnabledChanged()
 {
-	const bool enabled = cvarManager->getCvar(enabledCvarName).getBoolValue();
+	CVarWrapper enabledCvar = cvarManager->getCvar("ps_enablePlugin");
+	bool enabled = enabledCvar.getBoolValue();
 	if (enabled)
 	{
 		if (!hooked)
@@ -604,16 +620,6 @@ void PremierSuite::delayedExit()
 //-----------------------------------------------------------------------------
 
 /// <summary>
-/// Change shortcut keybind: unbind desired key
-/// </summary>
-void PremierSuite::changeGuiKeybind(std::string newKeybind)
-{
-	cvarManager->executeCommand("unbind \"" + cvarManager->getCvar("is_gui_keybind").getStringValue());
-	cvarManager->executeCommand("bind \"" + newKeybind + "\" \"togglemenu PremierSuite\"", true);
-	cvarManager->log("Changed the keybind for \"togglemenu PremierSuite\" to \"" + cvarManager->getCvar("is_gui_keybind").getStringValue() + "\"");
-}
-
-/// <summary>
 /// Quick-change if plugin is enabled, sets cvar to opposite it's current value 
 /// </summary>
 void PremierSuite::quickPluginEnabled()
@@ -647,6 +653,72 @@ bool IsGUIWindowBound(const std::string& windowName)
 	}
 
 	return false;
+}
+
+// <summary>Get current keybinds for GUI.</summary>
+// <param name="windowName">Name of the GUI window</param>
+// <returns> Vector of std::string keybinds.</returns>
+std::vector<std::string> PremierSuite::GetGUIKeyFromBindsConfig(const std::string windowName, bool log = false)
+{
+	const std::string bind = "togglemenu " + windowName;
+	std::ifstream file(BINDS_FILE_PATH);
+	std::vector<std::string> lines;
+
+	if (file.is_open()) {
+		std::string line;
+		std::string word;
+		while (getline(file, line)) {
+			if (line.find(bind) != std::string::npos) {
+				std::vector<std::string> x = split(line, ' ');
+				lines.push_back(x[1]);
+				if (log) {
+					cvarManager->log(x[0]);
+					cvarManager->log(x[1]);
+					cvarManager->log(x[2]);
+				}
+			}
+		}
+		file.close();
+		return std::vector<std::string>(lines);
+	}
+	cvarManager->log("No keybinds for " + windowName + " found.");
+	return {};
+}
+
+// <summary>Get number of keybinds present in binds.cfg.</summary>
+// <returns> Int of number of bound keybinds.</returns>
+int PremierSuite::GetBoundConfigKeybinds()
+{
+	std::vector<std::string> vctKeybinds = GetGUIKeyFromBindsConfig(GetMenuName());
+	return static_cast<int>(vctKeybinds.size());
+}
+
+// <summary>Check correct keybinds are set from CFG onLoad()</summary>
+void PremierSuite::handleKeybindCvar() {
+	std::vector<std::string> vectorKeybinds = GetGUIKeyFromBindsConfig(GetMenuName());
+
+	if (vectorKeybinds.empty()) {
+		cvarManager->log("No premiersuite in cfg, setting default: F3");
+		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
+	}
+	if ((size_t)vectorKeybinds.size() == 1) {
+		cvarManager->log("Setting keybind" + vectorKeybinds[0]);
+		cvarManager->setBind(vectorKeybinds[0], "togglemenu " + GetMenuName());
+		
+	}
+	else {
+		bool bound = false;
+		// Loop through each keybind, remove default and add currently bound
+		for (std::string bind : vectorKeybinds) {
+			if (bound == false) {
+				if (bind == "F3") { cvarManager->removeBind(bind); }
+				else {
+					cvarManager->setBind(bind, "togglemenu premiersuite");
+					bound = true;
+				}
+			}
+		}
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -714,10 +786,17 @@ void PremierSuite::removeOldPlugin() {
 	cvarManager->executeCommand("writeplugins");
 }
 
+void PremierSuite::getKeybind() {
+	std::string x = guiKeybind;
+}
+
+void getEnabled() {}
+
 void PremierSuite::onLoad()
 {
 
 	_globalCvarManager = cvarManager;
+	//_globalPersistentStorage = std::make_shared<PersistentStorage>(this, "PremierSuite", true, true);
 
 	//-----------------------------------------------------------------------------
 	// File Helper Cvars
@@ -727,20 +806,41 @@ void PremierSuite::onLoad()
 	std::filesystem::path BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
 	if (!exists(BakkesModCrashesFolder)) {
 		std::filesystem::create_directory(BakkesModCrashesFolder);
+		LOG("Data folder created: {}", BakkesModCrashesFolder.u8string());
+
 	}
 	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"premiersuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
-		cvarManager->log("Data folder created:" + PremierSuiteDataFolder.u8string());
+		LOG("Data folder created: {}", PremierSuiteDataFolder.u8string());
 	}
 
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
 	//-----------------------------------------------------------------------------
-	// Persistent Cvars (see https://wiki.bakkesplugins.com/code_snippets/persistent_storage/)
+	// CVar registration
 	//-----------------------------------------------------------------------------
 
-	cvarManager->registerCvar(enabledCvarName, "1", "Determines whether Instant Suite is enabled.").addOnValueChanged(std::bind(&PremierSuite::pluginEnabledChanged, this));
+
+	//auto enabledCvarName = _globalPersistentStorage->RegisterPersistentCvar("ps_enablePlugin", "1", "Determines whether Instant Suite is enabled.", true);
+	//if (!enabledCvarName) { LOG("enabledCvarName is null"); return; }
+	//
+	//
+	//auto globalKeybindCvar = _globalPersistentStorage->RegisterPersistentCvar("ps_gui_keybind", DEFAULT_GUI_KEYBIND, "Keybind for the GUI", true);
+	//if (!globalKeybindCvar) { LOG("globalKeybindCvar is null"); return; }
+	
+	
+	cvarManager->registerCvar("ps_gui_keybind", "F3", "Keybind for the GUI", true);
+	auto keybindCvar = cvarManager->getCvar("ps_gui_keybind");
+	keybindCvar.bindTo(guiKeybind);
+		keybindCvar.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			auto oldVar = cvarManager->getCvar("ps_gui_keybind");
+			oldVar.setValue(cvar.getStringValue());
+		}
+	);
+	if (!enabledCvarName) { LOG("enabledCvarName is null"); return; }
+
+
 	cvarManager->registerCvar(disablePrivateCvarName, "0", "Disable plugin during Private, Tournament, and Heatseeker matches.");
 	cvarManager->registerCvar(DelayCvarName, "0", "Seconds to wait before loading into training mode.");
 
@@ -756,12 +856,13 @@ void PremierSuite::onLoad()
 	//BETA Workshop cvars
 	cvarManager->registerCvar(wtrainingCvarName, "0", "Instantly jump into a workshop map at end of match.");
 	cvarManager->registerCvar(workshopCvarName, "", "Desired workshop map.");
+
 	workshopMapDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("is_workshop_path", WORKSHOP_MAPS_PATH.string(),
+	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
 		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
 
 	customMapDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("is_custom_path", CUSTOM_MAPS_PATH.string(),
+	cvarManager->registerCvar("ps_custom_path", CUSTOM_MAPS_PATH.string(),
 		"Default path for your custom maps directory").bindTo(customMapDirPath);
 
 	//Exit Cvars
@@ -773,17 +874,44 @@ void PremierSuite::onLoad()
 	cvarManager->registerCvar(disableCasualQCvarName, "0", "Don't automatically queue when ending a casual game.");
 
 	//Keybind Cvars
-	cvarManager->registerCvar(keybindCvarName, DEFAULT_GUI_KEYBIND, "Keybind for the gui");
-
-	// Set the window bind to the default keybind if is not set.
-	if (!IsGUIWindowBound(GetMenuName()))
-	{
-		cvarManager->log("GUI keybind not bound. Binding to F3");
-		cvarManager->setBind(DEFAULT_GUI_KEYBIND, "togglemenu " + GetMenuName());
+	cvarManager->registerNotifier("keybind_notification", [this](std::vector<std::string> args) {
+		std::string keybind;
+	if (args.size() == 1) {
+		keybind = args[0];
+		gameWrapper->Toast("Keybind: " + keybind, "", "default", 3.5F, 0U, 300.0F);
 	}
 	else {
-		cvarManager->log("GUI keybind bound. Binding to F3");
-	};
+		cvarManager->log("Too many args!");
+	}
+		}, "", PERMISSION_ALL);
+
+	cvarManager->registerNotifier("debug", [this](std::vector<std::string> args) {
+		std::vector<std::string> vectorKeybinds = GetGUIKeyFromBindsConfig(GetMenuName(), false);
+
+	if (vectorKeybinds.empty()) {
+		cvarManager->log("setBind(DEFAULT_GUI_KEYBIND");
+	}
+	if ((size_t)vectorKeybinds.size() == 1) {
+		cvarManager->log("Set to t[1]: " + vectorKeybinds[1]);
+	}
+	else {
+		int i = -1;
+		bool bound = false;
+		// Loop through each keybind, remove default and add currently bound
+
+		for (std::string bind : vectorKeybinds) {
+			if (bound == false) {
+				if (bind == "F3") { cvarManager->log("Else - set to F3: " + bind); }
+				else {
+					cvarManager->log("Else - set to bind: " + bind);
+					bound = true;
+				}
+			}
+		}
+	}
+		}, "", PERMISSION_ALL);
+	// Set the window bind to the default keybind if is not set.
+	handleKeybindCvar();
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) 
 		{
@@ -796,7 +924,8 @@ void PremierSuite::onLoad()
 void PremierSuite::onUnload()
 {
 	{
-		//* Save all cvars to 'config.cfg'.
-		cvarManager->backupCfg(CONFIG_FILE_PATH.string());
+		//* Save all cvars and keybinds to 'config.cfg'.
+		/*cvarManager->backupCfg(CONFIG_FILE_PATH.string());
+		cvarManager->backupBinds(BINDS_FILE_PATH.string());*/
 	}
 }

@@ -3,6 +3,7 @@
 #include "IMGUI/imgui.h"
 #include "IMGUI/imgui_internal.h"
 
+
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -95,11 +96,7 @@
 #endif
 #endif
 
-
 extern std::filesystem::path PremierSuiteDataFolder;
-
-#define STYLES_FOLDER_PATH       (PremierSuiteDataFolder / "styles")
-
 
 extern bool ImGuiSaveStyle(const char* filename, const ImGuiStyle& style);
 extern bool ImGuiLoadStyle(const char* filename, ImGuiStyle& style);
@@ -128,38 +125,10 @@ ImGuiDemoMarkerCallback             GImGuiDemoMarkerCallback = NULL;
 void* GImGuiDemoMarkerCallbackUserData = NULL;
 #define IMGUI_DEMO_MARKER(section)  do { if (GImGuiDemoMarkerCallback != NULL) GImGuiDemoMarkerCallback(__FILE__, __LINE__, section, GImGuiDemoMarkerCallbackUserData); } while (0)
 
-constexpr auto DEBUG = true;
-
-void PremierSuite::SaveStyle() 
-{
-	static ImGuiStyle style = ImGui::GetStyle();
-	ImGui::BeginChild("Save");
-	ImGui::Text("\n");
-	ImGui::Text("Save the current style:");
-	static bool saveCurrentStyle = false;
-	saveCurrentStyle = ImGui::Button("Save Current Style");
-
-	char fullfilepath[100];
-	std::string temppath = STYLES_FOLDER_PATH.string();
-	const char* stylesname = "myimguistyle.style";
-	strcpy(fullfilepath, temppath.c_str());
-	strcat(fullfilepath, stylesname);
-	if (saveCurrentStyle) {
-		if (!ImGuiSaveStyle(fullfilepath, ImGui::GetStyle())) {
-			fprintf(stderr, "Warning: \"./myimgui.style\" cannot be saved.\n");
-		}
-		else {
-			ImGuiSaveStyle(fullfilepath, style);
-			cvarManager->log("Saved");
-		}
-	}
-	ImGui::EndChild();
-}
-
-
 /// <summary>ImGui widgets to render.</summary>
 void PremierSuite::Render()
-{
+{	
+	/*cvarManager->executeCommand("exec config.cfg");*/
 	IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context.");
 
 	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
@@ -174,8 +143,7 @@ void PremierSuite::Render()
 			ImGui::Indent(5);
 			ImGui::Spacing();
 			renderSettingsTab();
-			renderKeybindsTab();
-		
+		/*	renderKeybindsTab();*/
 			ImGui::EndTabBar();
 		}
 		
@@ -186,11 +154,9 @@ void PremierSuite::Render()
 	ImGui::End();
 }
 
-
 //-----------------------------------------------------------------------------
 // Render ImGui Widgets
 //-----------------------------------------------------------------------------
-
 
 /// <summary> Renders main menu. </summary>
 void PremierSuite::renderMenu()
@@ -262,7 +228,7 @@ void PremierSuite::renderKeybindsTab()
 	{
 		if (ImGui::BeginChild("Keybinds"))
 		{
-			ImGui::Dummy(ImVec2(0.0f, 10.0f));
+			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			ImGui::Text(
 				"Easily Change keybinds to whatever button you'd like.\n"
@@ -273,27 +239,32 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::Spacing();
 			ImGui::Spacing();
 
-			static char keybind[128] = "";
-			static auto keybindCvar = cvarManager->getCvar(keybindCvarName);
-			std::string cvarName = keybindCvar.getStringValue();
+			static char keybindInput[128] = "";
 
+			auto currentKb = cvarManager->getCvar("ps_gui_keybind");
+			if (!currentKb) { return; }
+			std::string currentKbString = currentKb.getStringValue();
+			
 			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
-			ImGui::InputTextWithHint("", "Type out your desired keybind", keybind, IM_ARRAYSIZE(keybind), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
+			ImGui::InputTextWithHint("", "Type out your desired keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
 			ImGui::PopItemWidth();
 
 			if (ImGui::Button("Change GUI Keybind"))
 			{
-				cvarManager->removeBind(keybindCvar.getStringValue());
-				cvarManager->setBind(keybind, "togglemenu " + GetMenuName());
-				keybindCvar.setValue(keybind);
+				cvarManager->removeBind(currentKbString);
+				cvarManager->setBind(keybindInput, "togglemenu " + GetMenuName());
+
 				cvarManager->executeCommand("writeconfig", true);
 			}
 			ImGui::Separator();
 			ImGui::Indent(5);
 			ImGui::Spacing();
 
-			ImGui::Text("Current GUI keybind: % s\n", cvarName.c_str());
-
+			ImGui::Text("Current GUI keybind: % s\n", currentKbString);
+			ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("\n"
+					"This may not be updated if loading plugin for the first time..\n\n");
 			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
@@ -448,7 +419,6 @@ void PremierSuite::OpenStyleEditorWindow(ImGuiStyle* ref)
 /// <summary> Renders main GUI settings. </summary>
 void PremierSuite::renderSettingsTab()
 {
-
 	if (ImGui::BeginTabItem("Settings"))
 	{
 		ImGui::Text(
@@ -459,7 +429,7 @@ void PremierSuite::renderSettingsTab()
 		ImGui::Spacing();
 
 		// ENABLE PLUGIN
-		static auto pluginCvar = cvarManager->getCvar(enabledCvarName);
+		static auto pluginCvar = cvarManager->getCvar("ps_enablePlugin");
 		auto pluginEnabled = pluginCvar.getBoolValue();
 
 		if (ImGui::Checkbox("Enable Plugin", &pluginEnabled)) {
@@ -828,6 +798,29 @@ void PremierSuite::StyleColorsCustom()
 	style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
 	style->Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
 }
+
+//void ToggleButton(const char* str_id, bool* v)
+//{
+//	ImVec4* colors = ImGui::GetStyle().Colors;
+//	ImVec2 p = ImGui::GetCursorScreenPos();
+//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+//
+//	float height = ImGui::GetFrameHeight();
+//	float width = height * 1.55f;
+//	float radius = height * 0.50f;
+//
+//	ImGui::InvisibleButton(str_id, ImVec2(width, height));
+//	if (ImGui::IsItemClicked()) *v = !*v;
+//	ImGuiContext& gg = *GImGui;
+//	float ANIM_SPEED = 0.085f;
+//	if (gg.LastActiveId == gg.CurrentWindow->GetID(str_id))// && g.LastActiveIdTimer < ANIM_SPEED)
+//		float t_anim = ImSaturate(gg.LastActiveIdTimer / ANIM_SPEED);
+//	if (ImGui::IsItemHovered())
+//		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_ButtonActive] : ImVec4(0.78f, 0.78f, 0.78f, 1.0f)), height * 0.5f);
+//	else
+//		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_Button] : ImVec4(0.85f, 0.85f, 0.85f, 1.0f)), height * 0.50f);
+//	draw_list->AddCircleFilled(ImVec2(p.x + radius + (*v ? 1 : 0) * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
+//}
 
 // Usage:
 //  static ExampleAppLog my_log;
@@ -1302,7 +1295,6 @@ static void ShowExampleAppConsole(bool* p_open)
 //-----------------------------------------------------------------------------
 // GUI Menu / Overlay Helpers
 //-----------------------------------------------------------------------------
-
 
 /// <summary>Gets the menu name.</summary>
 /// <returns>The menu name</returns>
