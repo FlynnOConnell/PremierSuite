@@ -1,29 +1,21 @@
 {
-    "configurations": [
-        {
-            "name": "Mac",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "/opt/homebrew/Cellar/llvm/15.0.4/lib/clang/15.0.4/include",
-                "/opt/homebrew/Cellar/llvm/15.0.4/include/c++/v1",
-                "${workspaceFolder}/PremierSuite/libs/includes/**",
-                "${workspaceFolder}/PremierSuite/libs/includes/IMGUI/**",
-                "${workspaceFolder}/PremierSuite/libs/includes/IMGUI/**/*",
-                "${workspaceFolder}/PremierSuite/libs/includes/IMGUI/**/**",
-                "/Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk/System/Library/Frameworks/Kernel.framework/Versions/A/Headers/IOKit",
-                "/Library/Developer/CommandLineTools/SDKs/MacOSX13.1.sdk/System/Library/Frameworks/Kernel.framework/Versions/A/Headers"
-            ],
-            "defines": [],
-            "macFrameworkPath": [
-                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
-            ],
-            "compilerPath": "/opt/homebrew/opt/llvm/bin/clang++",
-            "cStandard": "c17",
-            "cppStandard": "c++20",
-            "intelliSenseMode": "${default}",
-            "compilerArgs": [],
-            "compileCommands": "/std:c++latest"
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/Library/Developer/CommandLineTools/usr/include/c++/**"
+      ],
+      "defines": [],
+      "macFrameworkPath": [
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+      ],
+      "compilerPath": "/opt/homebrew/Cellar/llvm/15.0.4/bin/clang++",
+      "cStandard": "c17",
+      "cppStandard": "c++23",
+      "intelliSenseMode": "macos-clang-arm64",
+      "compilerArgs": []
+    }
+  ],
+  "version": 4
 }
