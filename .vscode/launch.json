@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "(lldb) Launch",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${fileDirname}/${fileBasenameNoExtension}",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "MIMode": "lldb",
+      "miDebuggerPath": "/usr/bin/lldb",
+      "preLaunchTask": "${defaultBuildTask}"
+    }
+  ],
+  "setupCommands": [
+    {
+      "text": "settings set target.process.thread.step-avoid-regexp \"\"",
+      "description": "Enable stepping into STL"
+    }
+  ]
+}
