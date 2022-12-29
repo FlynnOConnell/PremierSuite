@@ -77,6 +77,8 @@ public:
         }
     }
 
+    inline bool CheckExists(const std::string& filepath);
+
 private:
 	std::shared_ptr<CVarManagerWrapper> cv_;
     std::filesystem::path storage_file_{ "" };

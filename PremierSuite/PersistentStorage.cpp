@@ -39,10 +39,10 @@ void PersistentStorage::WritePersistentStorage()
 	}
 }
 
-//inline bool PersistentStorage::CheckExists(const std::string& filepath)
-//{
-//	return std::filesystem::exists(filepath);
-//}
+inline bool PersistentStorage::CheckExists(const std::string& filepath)
+{
+	return std::filesystem::exists(filepath);
+}
 
 void PersistentStorage::Load()
 {

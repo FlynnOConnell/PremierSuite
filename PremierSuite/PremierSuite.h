@@ -36,18 +36,25 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 class PremierSuite : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
 {
 	std::shared_ptr<bool> enabled;
+	std::shared_ptr<bool> freeplayEnabled;
+	std::shared_ptr<bool> customEnabled;
+	std::shared_ptr<bool> exitEnabled;
+	std::shared_ptr<bool> workshopEnabled;
+
+	std::shared_ptr<std::string> keybind;
+	std::shared_ptr<std::string> customCode;
+	std::shared_ptr<std::string> workshop;
+	std::shared_ptr<std::string> workshopMapDirPath;
+	std::shared_ptr<std::string> customMapDirPath;
+
 	virtual void onLoad();
 	virtual void onUnload();
 
 public:
 	// Help return lowercase if need be for epic games workshop integration 
 	static std::string toLower(std::string str, bool changeInline = false);
-	std::shared_ptr<std::string> globalKeybind;
 
 private:
-
-	void getKeybind();
-	void getEnabled();
 	
 	// General Declaration
 	void pluginEnabledChanged();
@@ -61,13 +68,13 @@ private:
 	void exitGame(ServerWrapper caller, void* params, std::string eventName);
 	void delayedQueue();
 	void delayedExit();
-	void removeOldPlugin();
+	void writePlugins();
 	void hookMatchEnded();
 	void unhookMatchEnded();
 	void logHookType(const char* const hookType) const;
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
 
-	void setDisableCasualQueue(bool newDisCasualQueue);
+	void quickPluginEnabled();
 	void setDisablePrivate(bool newDisPrivate);
 	void setDisableCasual(bool newDisCasual);
 
@@ -75,29 +82,18 @@ private:
 	void setDelay(float newDelay);
 
 	void setPluginEnabled(bool newPluginEnabled);
-	void setQueueEnabled(bool newQueueEnabled);
-	void setTrainingEnabled(bool newTrainingEnabled);
-	void setCustomTrainingEnabled(bool newCustomTrainingEnabled);
-	void setCustomTrainingCode(std::string newCustomTrainingCode);
-	void setWorkshopEnabled(bool newWorkshopEnabled);
 	void setExitEnabled(bool newExitEnabled);
 
 	int rank_nb = 23;
 
 	SteamID mySteamID = { 0 };
 
-	static constexpr const char* pluginEnabled = "1";
-	static constexpr const char* guiKeybind = "F5";
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
-	static constexpr const char* enabledCvarName = "ps_enablePlugin";
-	static constexpr const char* trainingCvarName = "ps_enableTraining";
-	static constexpr const char* ctrainingCvarName = "ps_enableCTraining";
-	static constexpr const char* wtrainingCvarName = "ps_enableWorkshop";
+
 	static constexpr const char* queueCvarName = "ps_enableQueue";
 	static constexpr const char* exitCvarName = "ps_enableExit";
 
 	static constexpr const char* trainingMapCvarName = "ps_trainingMap";
-	static constexpr const char* customtrainingCvarName = "ps_ctrainingMap";
 	static constexpr const char* workshopCvarName = "ps_workshopMap";
 
 	static constexpr const char* DelayCvarName = "ps_Delay";
@@ -114,9 +110,7 @@ private:
 	std::vector<std::string> GetGUIKeyFromBindsConfig(const std::string windowName, bool log);
 
 	// File Helpers
-	std::shared_ptr<std::string> stylesDirPath;
-	std::shared_ptr<std::string> workshopMapDirPath;
-	std::shared_ptr<std::string> customMapDirPath;
+	
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath,
 		const std::vector<std::string>& extensions = { ".upk", ".udk" },
 		const std::string& preferredExtension = ".udk");
@@ -136,18 +130,14 @@ private:
 	std::vector<uint64_t> publishedFileID;
 	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
 
-
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
-
-	//void changePluginEnabledKeybind();
-	void quickPluginEnabled();
 
 	// Window settings
 	bool isWindowOpen = false;
 	bool isMinimized = false;
 	std::string menuTitle = "premiersuite";
-	std::shared_ptr<PersistentStorage> _persistentStorage;
+
 public:
 	virtual void Render();
 	virtual std::string GetMenuName();
@@ -165,21 +155,21 @@ private:
 	void renderSettingsTab();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
-	void StyleColorsCustom();
 	bool renderStyleCombo(const char* label);
 
 	void handleKeybindCvar();
 	bool hooked = false;
 	int GetBoundConfigKeybinds();
 	bool enableCustomMaps = false;
-	bool enableWorkshopMaps = false;
 	bool refreshCustomMapPaths = true;
 	int currentFreeplayMap = 0;
+
 	// Maps customMapPaths key or map path
 	std::string currentMap;
 	std::string currentMapFile;
 	std::vector<std::filesystem::path> otherMapPaths;
 	std::vector<std::filesystem::path> presetPaths;
+
 	// Maps internal name to display name
 	std::map<std::string, std::string> maps;
 	// Maps path to display name 
@@ -191,8 +181,6 @@ private:
 		std::string packAuthor;
 		bool loaded = false;
 	};
-
-	std::map<std::string, PackInfo> allPacks;
 
 	bool renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps,
 		std::filesystem::path&, bool& refreshCustomMaps,

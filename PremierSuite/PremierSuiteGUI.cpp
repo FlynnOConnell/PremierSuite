@@ -104,6 +104,10 @@ extern bool ImGuiLoadStyle(const char* filename, ImGuiStyle& style);
 static void ShowExampleAppConsole(bool* p_open);
 static void ShowExampleAppLog(bool* p_open);
 
+extern void EmbraceTheDarknessTheme();
+extern void MinimalMatteTheme();
+extern void DarkRedTheme();
+
 static void HelpMarker(const char* desc)
 {
 	ImGui::TextDisabled("(?)");
@@ -143,7 +147,7 @@ void PremierSuite::Render()
 			ImGui::Indent(5);
 			ImGui::Spacing();
 			renderSettingsTab();
-		/*	renderKeybindsTab();*/
+			renderKeybindsTab();
 			ImGui::EndTabBar();
 		}
 		
@@ -203,6 +207,7 @@ void PremierSuite::renderMenu()
 
 	if (ImGui::BeginMenu("Tools"))
 	{
+		HelpMarker("Tools for developers.");
 		ImGui::MenuItem("Style Editor", NULL, &show_app_style_editor);
 		ImGui::MenuItem("Console", NULL, &show_app_console);
 		ImGui::MenuItem("Log", NULL, &show_app_log);
@@ -241,7 +246,7 @@ void PremierSuite::renderKeybindsTab()
 
 			static char keybindInput[128] = "";
 
-			auto currentKb = cvarManager->getCvar("ps_gui_keybind");
+			auto currentKb = cvarManager->getCvar("plugin_keybind");
 			if (!currentKb) { return; }
 			std::string currentKbString = currentKb.getStringValue();
 			
@@ -253,7 +258,7 @@ void PremierSuite::renderKeybindsTab()
 			{
 				cvarManager->removeBind(currentKbString);
 				cvarManager->setBind(keybindInput, "togglemenu " + GetMenuName());
-
+				currentKb.setValue(keybindInput);
 				cvarManager->executeCommand("writeconfig", true);
 			}
 			ImGui::Separator();
@@ -421,52 +426,57 @@ void PremierSuite::renderSettingsTab()
 {
 	if (ImGui::BeginTabItem("Settings"))
 	{
+		ImGui::Spacing();
 		ImGui::Text(
-			"PremierSuite: Instant Access to Auto-Queue, Freeplay, and Custom Training.\n"
+			"PremierSuite:\n\n"
+			"Instant Access to Auto-Queue, Freeplay, and Custom Training."
 		);
+		ImGui::Spacing();
 		ImGui::Separator();
 		ImGui::Indent(5);
 		ImGui::Spacing();
 
 		// ENABLE PLUGIN
-		static auto pluginCvar = cvarManager->getCvar("ps_enablePlugin");
+		static auto pluginCvar = cvarManager->getCvar("plugin_enabled");
 		auto pluginEnabled = pluginCvar.getBoolValue();
-
+		
 		if (ImGui::Checkbox("Enable Plugin", &pluginEnabled)) {
 			pluginCvar.setValue(pluginEnabled);
-			cvarManager->log("Plugin Enabled!");
+			cvarManager->executeCommand("writeconfig", false);
 		}
-
-		//
-		// BEGIN OPTIONS
-		//
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Enable/Disable the plugin and all of its functionality.\n"
+				"You can also bind this to a key in the Keybinds tab!.\n\n");
 
 		ImGui::BeginChild("Plugin Options", ImVec2(0, 0));
+		ImGui::Spacing();
+		ImGui::Spacing();
+
 		// DISABLE PRIVATE
 		static auto disablePrivateCvar = cvarManager->getCvar(disablePrivateCvarName);
 		auto disablePrivate = disablePrivateCvar.getBoolValue();
-		if (ImGui::Checkbox("Disable Plugin for Private", &disablePrivate)) {
+		if (ImGui::Checkbox("Disable for Private", &disablePrivate)) {
 			disablePrivateCvar.setValue(disablePrivate);
 			cvarManager->executeCommand("writeconfig", false);
-			cvarManager->log("Disabled Instant Functions for Private Matches");
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("When this box is checked, the plugin will deactivate during private matches.");
+		ImGui::Spacing();
 		ImGui::Separator();
+		ImGui::Spacing();
 
 		// AUTO QUEUE
 		static auto queueCvar = cvarManager->getCvar(queueCvarName);
 		auto queueEnabled = queueCvar.getBoolValue();
 
-		ImGui::Text("Instant Queue Settings");
+		ImGui::Text("Auto Queue");
 		if (ImGui::Checkbox("", &queueEnabled)) {
 			queueCvar.setValue(queueEnabled);
 			cvarManager->executeCommand("writeconfig", false);
-			cvarManager->log("Instant Queue Enabled!");
 		}
-		ImGui::SameLine();
-		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered())
-			ImGui::SetTooltip("Enable/Disable the plugin and all of its functionality.\n"
-				"You can also bind this to a key in the Keybinds tab!.\n\n");
+			ImGui::SetTooltip("Automatically queue when an online match has ended.");
+		ImGui::SameLine();
 
 		// DELAYED QUEUE
 		static auto queueDelayCvar = cvarManager->getCvar(qDelayCvarName);
@@ -479,20 +489,22 @@ void PremierSuite::renderSettingsTab()
 		if (ImGui::SliderFloat("", &queueDelayTime, 0.0f, 20.0f, "Delay: %.1f s")) {
 			queueDelayCvar.setValue(queueDelayTime);
 			cvarManager->executeCommand("writeconfig", false);
-			cvarManager->log("Change Queue Delay Timer");
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Set a delay for the auto-queue.");
+
 		ImGui::PopID();
 		ImGui::PopItemWidth();
-
 		// DISABLE Q FOR CASUAL
 		static auto disableCasualQueueCvar = cvarManager->getCvar(disableCasualQCvarName);
 		auto disableCasualQueue = disableCasualQueueCvar.getBoolValue();
 		ImGui::PushID("disableQ");
-		if (ImGui::Checkbox("Disable Queue for Casual", &disableCasualQueue)) {
+		if (ImGui::Checkbox("Disable for Casual", &disableCasualQueue)) {
 			disableCasualQueueCvar.setValue(disableCasualQueue);
 			cvarManager->executeCommand("writeconfig", false);
-			cvarManager->log("Disabled Instant Functions for Private Matches");
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Disable the automatic queue for casual games.");
 		ImGui::PopID();
 
 		static auto delayCvar = cvarManager->getCvar(DelayCvarName);
@@ -500,11 +512,12 @@ void PremierSuite::renderSettingsTab()
 		static auto disCasualCvar = cvarManager->getCvar(disableCasualCvarName);
 		auto disableCasual = disCasualCvar.getBoolValue();
 
-		ImGui::Text("Delay and Disable Casual for Exit Settings");
+		ImGui::Text("Instant Exit");
 		if (ImGui::Checkbox("Disable for Casual", &disableCasual)) {
 			disCasualCvar.setValue(disableCasual);
-			cvarManager->log("Disabled for Casual");
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Disable the all automatic-exit settings for casual matches..");
 		ImGui::SameLine();
 
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.5f);
@@ -512,13 +525,16 @@ void PremierSuite::renderSettingsTab()
 			delayCvar.setValue(delayTime);
 			cvarManager->log("Delay Set");
 		}
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Set a delay for auto-exit options (options are below).");
 		ImGui::PopItemWidth();
-
+		ImGui::Spacing();
+		ImGui::Spacing();
 		//-----------------------------------------------------------------------------
 		// Auto-Exit
 		//-----------------------------------------------------------------------------
 
-		ImGui::Text("Auto-exit on game end");
+		ImGui::Text("Auto-Exit Options");
 		ImGui::SameLine();
 		ImGui::TextDisabled("(?)");
 		if (ImGui::IsItemHovered())
@@ -526,68 +542,86 @@ void PremierSuite::renderSettingsTab()
 							  "Current options: Main-Menu, Freeplay, Custom Training Pack.\n"
 							  "Workshops, private game modes and specialty game modes are on the way.\n\n"
 							  "*If multiple exit-options are enabled, the uppmost most selection will be executed.");
+		ImGui::Spacing();
+		ImGui::Spacing();
 		ImGui::Separator();
 		ImGui::Spacing();
-
+		ImGui::Spacing();
+		
 		if (ImGui::TreeNode("Freeplay"))
 		{
-			static auto trainingCvar = cvarManager->getCvar(trainingCvarName);
+			static auto trainingCvar = cvarManager->getCvar("freeplay_enable");
 			auto trainingEnabled = trainingCvar.getBoolValue();
-			ImGui::Text("Instant Training Settings");
-			if (ImGui::Checkbox("##Enable", &trainingEnabled)) {
+
+			if (ImGui::Checkbox("", &trainingEnabled)) {
 				trainingCvar.setValue(trainingEnabled);
 				cvarManager->executeCommand("writeconfig", false);
-				cvarManager->log("Instant Training Enabled!");
 			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Instant-exit to Freeplay.\n");
+
 			ImGui::TreePop();
 		}
+		ImGui::Spacing();
+		ImGui::Spacing();
 		ImGui::Separator();
+		ImGui::Spacing();
 		ImGui::Spacing();
 
 		if (ImGui::TreeNode("Custom Training"))
 		{
 			static char str0[128] = "";
-			static auto ctrainingCvar = cvarManager->getCvar(ctrainingCvarName);
+			static auto ctrainingCvar = cvarManager->getCvar("custom_enable");
 			auto customTrainingEnabled = ctrainingCvar.getBoolValue();
-			static auto ctrainingPCvar = cvarManager->getCvar(customtrainingCvarName);
+			static auto ctrainingPCvar = cvarManager->getCvar("custom_code");
 			auto customtrainingPCvarName = ctrainingPCvar.getStringValue();
 
 			static ImGuiInputTextFlags flags = ImGuiInputTextFlags_CharsNoBlank;
 
-			ImGui::Text("Instant Custom Training Settings");
-			if (ImGui::Checkbox("##Enable", &customTrainingEnabled)) {
+			if (ImGui::Checkbox("", &customTrainingEnabled)) {
 				ctrainingCvar.setValue(customTrainingEnabled);
 				cvarManager->executeCommand("writeconfig", false);
 				cvarManager->log("Custom Training Enabled! Current training pack: " + customtrainingPCvarName);
 			}
-
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Instant-exit to Custom Training.\n");
 			ImGui::SameLine();
 			if (ImGui::InputTextWithHint("Training Pack Code", "XXXX-XXXX-XXXX-XXXX", str0, IM_ARRAYSIZE(str0), 0, 0)) {
 				ctrainingPCvar.setValue(str0);
 				cvarManager->executeCommand("writeconfig", false);
 				cvarManager->log("New training pack code entered:");
 				cvarManager->log(str0);
-
 			}
+			ImGui::SameLine();
+			ImGui::TextDisabled("(?)");
+			if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Enter training code pack. The default is:.\n"
+						"A0FE-F860-967D-E628\n"
+						"This is one I made :)"
+					);
 			ImGui::TreePop();
 		}
+		ImGui::Spacing();
+		ImGui::Spacing();
 		ImGui::Separator();
+		ImGui::Spacing();
 		ImGui::Spacing();
 
 		if (ImGui::TreeNode("Exit"))
 		{
-			static auto exitCvar = cvarManager->getCvar(exitCvarName);
+			static auto exitCvar = cvarManager->getCvar("exit_enable");
 			auto exitEnabled = exitCvar.getBoolValue();
-
-			ImGui::Text("Instant Exit Settings");
-			if (ImGui::Checkbox("##Enable", &exitEnabled)) {
+			if (ImGui::Checkbox("", &exitEnabled)) {
 				exitCvar.setValue(exitEnabled);
 				cvarManager->executeCommand("writeconfig", false);
 				cvarManager->log("Enabled Instant Exit");
 			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Instant-exit to Main-Menu.\n");
 			ImGui::TreePop();
 		}
-
+		ImGui::Spacing();
+		ImGui::Spacing();
 		ImGui::EndChild();
 		ImGui::EndTabItem();
 	}
@@ -730,73 +764,20 @@ void PremierSuite::renderAboutWindow(bool* p_open)
 bool PremierSuite::renderStyleCombo(const char* label)
 {
 	static int style_idx = -1;
-	if (ImGui::Combo(label, &style_idx, "Classic\0Dark\0Light\0MyFavorite\0"))
+	if (ImGui::Combo(label, &style_idx, "Classic\0Dark\0Light\0DarknessEmbrace\0MinimalMatte\0DarkRed\0"))
 	{
 		switch (style_idx)
 		{
-		case 0: ImGui::StyleColorsClassic(); break;
-		case 1: ImGui::StyleColorsDark(); break;
-		case 2: ImGui::StyleColorsLight(); break;
-		case 3: PremierSuite::StyleColorsCustom(); break;
+			case 0: ImGui::StyleColorsClassic(); break;
+			case 1: ImGui::StyleColorsDark(); break;
+			case 2: ImGui::StyleColorsLight(); break;
+			case 3: EmbraceTheDarknessTheme(); break;
+			case 4: MinimalMatteTheme(); break;
+			case 5: DarkRedTheme(); break;
 		}
 		return true;
 	}
 	return false;
-}
-
-/// <summary> A style I personally enjoy. </summary>
-void PremierSuite::StyleColorsCustom()
-{
-	ImGuiStyle* style = &ImGui::GetStyle();
-	ImVec4* colors = style->Colors;
-
-	style->WindowPadding = ImVec2(15, 15);
-	style->WindowRounding = 5.0f;
-	style->FramePadding = ImVec2(5, 5);
-	style->FrameRounding = 4.0f;
-	style->ItemSpacing = ImVec2(12, 8);
-	style->ItemInnerSpacing = ImVec2(8, 6);
-	style->IndentSpacing = 25.0f;
-	style->ScrollbarSize = 15.0f;
-	style->ScrollbarRounding = 9.0f;
-	style->GrabMinSize = 5.0f;
-	style->GrabRounding = 3.0f;
-
-	style->Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.00f);
-	style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-	style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-	style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
-	style->Colors[ImGuiCol_BorderShadow] = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
-	style->Colors[ImGuiCol_FrameBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-	style->Colors[ImGuiCol_FrameBgActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	style->Colors[ImGuiCol_TitleBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 0.98f, 0.95f, 0.75f);
-	style->Colors[ImGuiCol_TitleBgActive] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-	style->Colors[ImGuiCol_MenuBarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-	style->Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	style->Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	style->Colors[ImGuiCol_CheckMark] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-	style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-	style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-	style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	style->Colors[ImGuiCol_Header] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-	style->Colors[ImGuiCol_HeaderHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	style->Colors[ImGuiCol_HeaderActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	style->Colors[ImGuiCol_ResizeGrip] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-	style->Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-	style->Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-	style->Colors[ImGuiCol_PlotLines] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-	style->Colors[ImGuiCol_PlotLinesHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-	style->Colors[ImGuiCol_PlotHistogram] = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-	style->Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-	style->Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
-	style->Colors[ImGuiCol_ModalWindowDarkening] = ImVec4(1.00f, 0.98f, 0.95f, 0.73f);
 }
 
 //void ToggleButton(const char* str_id, bool* v)

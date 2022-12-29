@@ -310,12 +310,6 @@ void PremierSuite::queue(ServerWrapper server, void* params, std::string eventNa
 	cvarManager->log("ps. settimeout(delayedQueue, queueDelaytime) has been called");
 }
 
-void PremierSuite::setQueueEnabled(bool newQueueEnabled)
-{
-	cvarManager->getCvar(queueCvarName).setValue(newQueueEnabled);
-	cvarManager->log("ps. queueCvarName has been set");
-}
-
 void PremierSuite::setDelayedQueue(float newQueueDelayTime)
 {
 	if (newQueueDelayTime == 0) {
@@ -323,7 +317,6 @@ void PremierSuite::setDelayedQueue(float newQueueDelayTime)
 	}
 	else {
 		cvarManager->getCvar(qDelayCvarName).setValue(newQueueDelayTime);
-		cvarManager->log("ps. qDelayCvarName has been set");
 	}
 }
 
@@ -344,11 +337,6 @@ void PremierSuite::delayedQueue()
 	cvarManager->log("PremierSuite queue command executed");
 }
 
-void PremierSuite::setDisableCasualQueue(bool newDisCasualQueue)
-{
-	cvarManager->getCvar(disableCasualQCvarName).setValue(newDisCasualQueue);
-	cvarManager->log("ps. disableCasualQCvarName has been set");
-}
 
 //-----------------------------------------------------------------------------
 //--- Exit to Freeplay
@@ -390,12 +378,6 @@ void PremierSuite::launchTraining(ServerWrapper server, void* params, std::strin
 
 	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedTraining, this), totalTrainingDelayTime);
 	cvarManager->log("ps. settimeout(delayedTraining, totalTrainingDelayTime executed");
-}
-
-void PremierSuite::setTrainingEnabled(bool newTrainingEnabled)
-{
-	cvarManager->getCvar(trainingCvarName).setValue(newTrainingEnabled);
-	cvarManager->log("ps. trainingCvarName has been set");
 }
 
 void PremierSuite::delayedTraining()
@@ -465,20 +447,10 @@ void PremierSuite::launchCustomTraining(ServerWrapper server, void* params, std:
 	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedCustomTraining, this), totalCustomTrainingDelayTime);
 }
 
-void PremierSuite::setCustomTrainingEnabled(bool newCustomTrainingEnabled)
-{
-	cvarManager->getCvar(ctrainingCvarName).setValue(newCustomTrainingEnabled);
-}
-
-void PremierSuite::setCustomTrainingCode(std::string newCustomTrainingCode)
-{
-	cvarManager->getCvar(customtrainingCvarName).setValue(newCustomTrainingCode);
-}
-
 void PremierSuite::delayedCustomTraining()
 {
 	auto game = gameWrapper->GetOnlineGame();
-	auto training_code = cvarManager->getCvar(customtrainingCvarName).getStringValue();
+	auto training_code = cvarManager->getCvar("custom_code").getStringValue();
 
 	if (game.IsNull()) { cvarManager->log("null_pntr"); return; }
 
@@ -530,10 +502,7 @@ void PremierSuite::launchWorkshop(ServerWrapper server, void* params, std::strin
 	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedWorkshop, this), totalWorkshopDelayTime);
 }
 
-void PremierSuite::setWorkshopEnabled(bool newWorkshopEnabled)
-{
-	cvarManager->getCvar(wtrainingCvarName).setValue(newWorkshopEnabled);
-}
+
 
 void PremierSuite::delayedWorkshop()
 {
@@ -624,13 +593,13 @@ void PremierSuite::delayedExit()
 /// </summary>
 void PremierSuite::quickPluginEnabled()
 {
-	bool pluginEnabled = cvarManager->getCvar(enabledCvarName).getBoolValue();
+	bool pluginEnabled = cvarManager->getCvar("plugin_enabled").getBoolValue();
 	if (pluginEnabled == false) {
-		cvarManager->getCvar(enabledCvarName).setValue(true);
+		cvarManager->getCvar("plugin_enabled").setValue(true);
 	}
 
 	if (pluginEnabled == true) {
-		cvarManager->getCvar(enabledCvarName).setValue(false);
+		cvarManager->getCvar("plugin_enabled").setValue(false);
 	}
 }
 
@@ -727,35 +696,36 @@ void PremierSuite::handleKeybindCvar() {
 
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
-	const bool exitEnabled = cvarManager->getCvar(exitCvarName).getBoolValue();
+	
 	const bool queueEnabled = cvarManager->getCvar(queueCvarName).getBoolValue();
-	const bool trainingEnabled = cvarManager->getCvar(trainingCvarName).getBoolValue();
-	const bool customtrainingEnabled = cvarManager->getCvar(ctrainingCvarName).getBoolValue();
-	const bool workshopEnabled = cvarManager->getCvar(wtrainingCvarName).getBoolValue();
-	if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+	const bool freeplayEnabled = cvarManager->getCvar("freeplay_enabled").getBoolValue();
+	const bool customtrainingEnabled = cvarManager->getCvar("custom_enabled").getBoolValue();
+	const bool workshopEnabled = cvarManager->getCvar("workshop_enabled").getBoolValue();
+	const bool exitEnabled = cvarManager->getCvar("exit_enabled").getBoolValue();
+	if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
 
 	if (queueEnabled) {
 		queue(server, params, eventName);
-		if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+		if (server.IsNull()) { cvarManager->log("null_pntr"); return; } 
 	}
 	if (exitEnabled) {
 		exitGame(server, params, eventName);
-		if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+		if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
 	}
 	else {
-		if (trainingEnabled) {
+		if (freeplayEnabled) {
 			launchTraining(server, params, eventName);
-			if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+			if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
 		}
 		else
 			if (customtrainingEnabled) {
 				launchCustomTraining(server, params, eventName);
-				if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+				if (server.IsNull()) { cvarManager->log("null_pntr"); return; } 
 			}
 			else
 				if (workshopEnabled) {
 					launchWorkshop(server, params, eventName);
-					if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+					if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
 				}
 	}
 }
@@ -781,22 +751,15 @@ void PremierSuite::logHookType(const char* const hookType) const
 	cvarManager->log(logBuffer.str());
 }
 
-void PremierSuite::removeOldPlugin() {
+void PremierSuite::writePlugins() {
+	
 	cvarManager->executeCommand("plugin unload instantsuite");
-	cvarManager->executeCommand("writeplugins");
 }
-
-void PremierSuite::getKeybind() {
-	std::string x = guiKeybind;
-}
-
-void getEnabled() {}
 
 void PremierSuite::onLoad()
 {
-
+	
 	_globalCvarManager = cvarManager;
-	//_globalPersistentStorage = std::make_shared<PersistentStorage>(this, "PremierSuite", true, true);
 
 	//-----------------------------------------------------------------------------
 	// File Helper Cvars
@@ -821,40 +784,89 @@ void PremierSuite::onLoad()
 	// CVar registration
 	//-----------------------------------------------------------------------------
 
+	enabled = std::make_shared<bool>(true);
+	freeplayEnabled = std::make_shared<bool>(false);
+	customEnabled = std::make_shared<bool>(false);
+	workshopEnabled = std::make_shared<bool>(false);
+	exitEnabled = std::make_shared<bool>(false);
 
-	//auto enabledCvarName = _globalPersistentStorage->RegisterPersistentCvar("ps_enablePlugin", "1", "Determines whether Instant Suite is enabled.", true);
-	//if (!enabledCvarName) { LOG("enabledCvarName is null"); return; }
-	//
-	//
-	//auto globalKeybindCvar = _globalPersistentStorage->RegisterPersistentCvar("ps_gui_keybind", DEFAULT_GUI_KEYBIND, "Keybind for the GUI", true);
-	//if (!globalKeybindCvar) { LOG("globalKeybindCvar is null"); return; }
-	
-	
-	cvarManager->registerCvar("ps_gui_keybind", "F3", "Keybind for the GUI", true);
-	auto keybindCvar = cvarManager->getCvar("ps_gui_keybind");
-	keybindCvar.bindTo(guiKeybind);
-		keybindCvar.addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			auto oldVar = cvarManager->getCvar("ps_gui_keybind");
-			oldVar.setValue(cvar.getStringValue());
+	keybind = std::make_shared<std::string>("F3");
+	customCode = std::make_shared<std::string>("F3");
+
+	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite", true, true, 0, true, 1).bindTo(enabled);
+	cvarManager->getCvar("plugin_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			if (cvar.getStringValue() == "1") {
+				LOG("PremierSuite: Enabled");
+			};
+			if (cvar.getStringValue() == "0") {
+				LOG("PremierSuite: Disabled");
+			};
 		}
 	);
-	if (!enabledCvarName) { LOG("enabledCvarName is null"); return; }
 
+	cvarManager->registerCvar("freeplay_enabled", "0", "Enable Instant Exit -> Freeplay", true, true, 0, true, 1).bindTo(freeplayEnabled);
+	cvarManager->getCvar("freeplay_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			if (cvar.getStringValue() == "1") {
+				LOG("Exit -> Freeplay: Enabled");
+			};
+			if (cvar.getStringValue() == "0") {
+				LOG("Exit -> Freeplay: Disabled");
+			};
+		}
+	);
+
+	cvarManager->registerCvar("custom_enabled", "0", "Enable Instant Exit -> Custom Training", true, true, 0, true, 1).bindTo(customEnabled);
+	cvarManager->getCvar("custom_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			if (cvar.getStringValue() == "1") {
+				LOG("Exit -> Custom Training: Enabled");
+			};
+			if (cvar.getStringValue() == "0") {
+				LOG("Exit -> Custom Training: Disabled");
+			};
+		}
+	);
+
+	cvarManager->registerCvar("exit_enabled", "0", "Enable Instant Exit -> Main Menu", true, true, 0, true, 1).bindTo(exitEnabled);
+	cvarManager->getCvar("exit_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			if (cvar.getStringValue() == "1") {
+				LOG("Exit -> Main Menu: Enabled");
+			};
+			if (cvar.getStringValue() == "0") {
+				LOG("Exit -> Main Menu: Disabled");
+			};
+		}
+	);
+
+	cvarManager->registerCvar("workshop_enabled", "0", "Enable Instant Exit -> Main Menu", true, true, 0, true, 1).bindTo(workshopEnabled);
+	cvarManager->getCvar("workshop_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			if (cvar.getStringValue() == "1") {
+				LOG("Exit -> Workshop: Enabled");
+			};
+			if (cvar.getStringValue() == "0") {
+				LOG("Exit -> Workshop: Disabled");
+			};
+		}
+	);
+	
+	cvarManager->registerCvar("plugin_keybind", "F3", "GUI Keybind", true, true, 0, true, 1).bindTo(keybind);
+	cvarManager->getCvar("plugin_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+			LOG("Keybind {} -> {}", oldValue, cvar.getStringValue());
+		}
+	);
+
+	cvarManager->registerCvar("custom_code", "A0FE-F860-967D-E628", "Custom-training code.", true, true, 0, true, 1).bindTo(customCode);
+	cvarManager->getCvar("plugin_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		LOG("Keybind {} -> {}", oldValue, cvar.getStringValue());
+		}
+	);
 
 	cvarManager->registerCvar(disablePrivateCvarName, "0", "Disable plugin during Private, Tournament, and Heatseeker matches.");
 	cvarManager->registerCvar(DelayCvarName, "0", "Seconds to wait before loading into training mode.");
 
 	//Training Cvars
-	cvarManager->registerCvar(trainingCvarName, "0", "");
 	cvarManager->registerCvar(trainingMapCvarName, "Beckwith Park (Stormy)", "Determines the map that will launch for training.");
 	cvarManager->registerCvar(disableCasualCvarName, "0", "Don't automatically go to training when ending a casual game.");
 
-	//BETA CustomTraining cvars
-	cvarManager->registerCvar(ctrainingCvarName, "0", "Instantly jump into custom training at end of match.");
-	cvarManager->registerCvar(customtrainingCvarName, "A0FE-F860-967D-E628", "User inputs training-pack code.");
-
-	//BETA Workshop cvars
-	cvarManager->registerCvar(wtrainingCvarName, "0", "Instantly jump into a workshop map at end of match.");
 	cvarManager->registerCvar(workshopCvarName, "", "Desired workshop map.");
 
 	workshopMapDirPath = std::make_shared<std::string>();
@@ -910,12 +922,13 @@ void PremierSuite::onLoad()
 		}
 	}
 		}, "", PERMISSION_ALL);
+
 	// Set the window bind to the default keybind if is not set.
 	handleKeybindCvar();
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) 
 		{
-		this->removeOldPlugin();
+		this->writePlugins();
 		}, 10);
 
 	hookMatchEnded();
@@ -924,8 +937,5 @@ void PremierSuite::onLoad()
 void PremierSuite::onUnload()
 {
 	{
-		//* Save all cvars and keybinds to 'config.cfg'.
-		/*cvarManager->backupCfg(CONFIG_FILE_PATH.string());
-		cvarManager->backupBinds(BINDS_FILE_PATH.string());*/
 	}
 }

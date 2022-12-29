@@ -122,7 +122,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir)fmt\include;$(ProjectDir)libs\includes;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
@@ -159,6 +159,7 @@
     </ClCompile>
     <ClCompile Include="PremierSuite.cpp" />
     <ClCompile Include="PremierSuiteGUI.cpp" />
+    <ClCompile Include="imgui_themes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="fmt\include\fmt\chrono.h" />

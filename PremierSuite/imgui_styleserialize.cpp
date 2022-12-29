@@ -39,7 +39,7 @@ To edit and save a style, you can use the default ImGui example and append to th
             loadCurrentStyle = ImGui::Button("Load Saved Style");
             saveCurrentStyle = ImGui::Button("Save Current Style");
             resetCurrentStyle = ImGui::Button("Reset Current Style");
-            if (loadCurrentStyle)   {
+            if (loadCurrentStyle)   {-
                 if (!ImGuiLoadStyle("./myimgui.style",ImGui::GetStyle()))   {
                     fprintf(stderr,"Warning: \"./myimgui.style\" not present.\n");
                 }
