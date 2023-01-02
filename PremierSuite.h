@@ -86,9 +86,7 @@ private:
 	//--- OnMatchEnd Logic
 	//-----------------------------------------------------------------------------
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
-	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue = false);
-
-	void queue(ServerWrapper caller, void* params, std::string eventName);
+	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue);
 
 	void executeWorkshop();
 	void executeCustomTraining();

@@ -415,9 +415,9 @@ void PremierSuite::checkConflicts()
 //--- Server Hooks
 //-----------------------------------------------------------------------------
 
-void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue = false) {
+void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue) {
 	float delay = 0;
-	float delaySetting;
+	float delaySetting = 0;
 	if (server.IsNull()) { return; }
 	if (queue) { float delaySetting = *delayQueue; }
 	else { float delaySetting = *delayExit; };
@@ -529,22 +529,22 @@ void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string ev
 	if (server.IsNull()) { return; }
 
 	if (*enableQueue) {
-		queue(server, params, eventName);
+		callbackSetDelay(server, params, eventName, [this]() { this->executeQueue(); }, false);
 	}
 	if (*exitEnabled) {
-		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); });
+		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); }, false);
 	}
 	else {
 		if (*freeplayEnabled) {
-			callbackSetDelay(server, params, eventName, [this]() { this->executeFreeplay(); });
+			callbackSetDelay(server, params, eventName, [this]() { this->executeFreeplay(); }, false);
 		}
 		else
 			if (*customEnabled) {
-				callbackSetDelay(server, params, eventName, [this]() { this->executeCustomTraining(); });
+				callbackSetDelay(server, params, eventName, [this]() { this->executeCustomTraining(); }, false);
 			}
 			else
 				if (*workshopEnabled) {
-					callbackSetDelay(server, params, eventName, [this]() { this->executeWorkshop(); });
+					callbackSetDelay(server, params, eventName, [this]() { this->executeWorkshop(); }, false);
 				}
 	}
 }
