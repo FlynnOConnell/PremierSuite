@@ -6,6 +6,7 @@
 #include <filesystem>
 #include "PremierSuite.h"
 #include "GuiBase.h"
+//#include "enums.h"
 
 #define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
@@ -35,6 +36,7 @@ enum Mode
 	RankedDropshot = 29,
 	RankedSnowday = 30,
 };
+
 
 /// <summary>Debug type-helper. Returns the type of the parameter passed.</summary>
 /// <typeparam name="T">Parameter to check.</typeparam>
@@ -219,48 +221,59 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 //--- Server Hook Setters
 //-----------------------------------------------------------------------------
 
-void PremierSuite::queue(ServerWrapper server, void* params, std::string eventName)
+bool PremierSuite::isRanked(ServerWrapper server) {
+	if (server.GetPlaylist().GetbRanked() == 1) { return true; };
+	return false;
+}
+
+bool PremierSuite::isPrivate(ServerWrapper server) {
+	return server.GetPlaylist().IsPrivateMatch();
+}
+
+bool PremierSuite::isTournament(ServerWrapper server) {
+	return server.GetPlaylist().IsPrivateMatch();
+}
+
+bool PremierSuite::isStandard(ServerWrapper server) {
+	if (server.GetPlaylist().GetbStandard() == 1) { return true; };
+	return false;
+}
+
+void addHandler(std::function<void(int)> callback)
 {
 
-	float totalQueueDelayTime = 0;
-	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
-	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	float queueDelayTime = cvarManager->getCvar("queue_delay").getFloatValue();
-	bool disableCasualQueue = cvarManager->getCvar("disable_queue_casual").getBoolValue();
-	bool disablePrivate = cvarManager->getCvar("disable_private").getBoolValue();
+}
 
-	if (autoGG) {
-		totalQueueDelayTime = queueDelayTime + autoGGDelayTime;
-	}
-	else {
-		totalQueueDelayTime = queueDelayTime;
-	}
 
-	if (!server.IsNull() && (disablePrivate || disableCasualQueue))
+void PremierSuite::queue(ServerWrapper server, void* params, std::string eventName)
+{
+	float delay = 0;
+	float delay = 0;
+	if (server.IsNull()) { return; }
+	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
+	else { delay = *delayExit; }
+	if (isTournament(server)) {
+		return;
+	}
+	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
 	{
-		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
-
-		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualQueue) {
+		if (isStandard(server) && *disableExitCasual) {
 			return;
 		}
-		else if ((playlist == Private || playlist == Tournament) && disablePrivate) {
+		if (isPrivate(server) && *disablePrivate) {
 			return;
 		}
 		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), queueDelayTime);
-			cvarManager->log("ps. settimeout(delayedQueue, queueDelaytime) has been called");
-
+			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), delay);
 		}
 	}
-
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), queueDelayTime);
+	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), delay);
 }
 
 void PremierSuite::delayedQueue()
 {
 	auto game = gameWrapper->GetOnlineGame();
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
+	if (game.IsNull()) { return; }
 	if (!game.IsNull())
 	{
 		if (!game.GetbMatchEnded())
@@ -268,43 +281,61 @@ void PremierSuite::delayedQueue()
 			return;
 		}
 	}
-
 	cvarManager->executeCommand("queue");
 }
 
 void PremierSuite::launchFreeplay(ServerWrapper server, void* params, std::string eventName)
 {
-	float totalTrainingDelayTime = 0;
-	float trainingDelayTime = cvarManager->getCvar("exit_delay").getFloatValue();
-	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
-	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+	float delay = 0;
+	if (server.IsNull()) { return; } 
+	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
+	else { delay = *delayExit; }
 
-	if (autoGG) {
-		totalTrainingDelayTime = *delayExit + autoGGDelayTime;
-	
-	}
-	else {
-		totalTrainingDelayTime = trainingDelayTime;
+	if (isTournament(server)) {
+		return;
 	}
 
-	bool disableCasualTraining = cvarManager->getCvar("disable_exit_casual").getBoolValue();
-	bool disablePrivate = cvarManager->getCvar("disable_private").getBoolValue();
-
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (disablePrivate || disableCasualTraining))
-		// ! reverses the result, && returns if both statements true, || returns if one statement is true
+	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
 	{
-		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
-
-		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
+		if (isStandard(server) && *disableExitCasual) {
+			return;
+		}
+		if (isPrivate(server) && *disablePrivate) {
 			return;
 		}
 		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), totalTrainingDelayTime);
+			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), delay);
 		}
 	}
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), totalTrainingDelayTime);
+	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), delay);
 }
+
+void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void(PremierSuite)> &callback) {
+	float delay = 0;
+	if (server.IsNull()) { return; }
+	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
+	else { delay = *delayExit; }
+
+	if (isTournament(server)) {
+		return;
+	}
+	delayedFreeplay();
+	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
+	{
+		if (isStandard(server) && *disableExitCasual) {
+			return;
+		}
+		if (isPrivate(server) && *disablePrivate) {
+			return;
+		}
+		else {
+			gameWrapper->SetTimeout(std::bind(&delayedFreeplay, this), delay);
+		}
+	}
+	gameWrapper->SetTimeout(std::bind(&callback, this), delay);
+
+}
+
 
 void PremierSuite::delayedFreeplay()
 {
@@ -320,8 +351,6 @@ void PremierSuite::delayedFreeplay()
 	launchTrainingCommandBuilder << "start " << mapname << "?Game=TAGame.GameInfo_Tutorial_TA?GameTags=Training";
 	const std::string launchTrainingCommand = launchTrainingCommandBuilder.str();
 	auto game = gameWrapper->GetOnlineGame();
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
 	if (!game.IsNull())
 	{
 		if (!game.GetbMatchEnded())
@@ -329,8 +358,6 @@ void PremierSuite::delayedFreeplay()
 			return;
 		}
 	}
-
-	//cvarManager->executeCommand("load_freeplay");
 	gameWrapper->ExecuteUnrealCommand(launchTrainingCommand);
 }
 
@@ -418,6 +445,7 @@ void PremierSuite::launchWorkshop(ServerWrapper server, void* params, std::strin
 	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedWorkshop, this), totalWorkshopDelayTime);
 }
 
+
 void PremierSuite::delayedWorkshop()
 {
 	auto game = gameWrapper->GetOnlineGame();
@@ -442,7 +470,7 @@ void PremierSuite::exitGame(ServerWrapper server, void* params, std::string even
 	float exitDelayTime = cvarManager->getCvar("exit_delay").getFloatValue();
 	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
 	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+	if (!server) { return; }
 
 	if (autoGG) {
 		totalExitDelayTime = exitDelayTime + autoGGDelayTime;
@@ -484,7 +512,6 @@ void PremierSuite::delayedExit()
 			return;
 		}
 	}
-
 	cvarManager->executeCommand("unreal_command disconnect");
 }
 
@@ -699,7 +726,6 @@ void PremierSuite::checkConflicts()
 	std::vector<std::string> conflicts = parseCfg("instantsuite", false);
 	if (!conflicts.empty()) {
 		cvarManager->executeCommand("unload instantsuite");
-		cvarManager->log("instant suite unloaded");
 	}
 }
 
@@ -709,30 +735,34 @@ void PremierSuite::checkConflicts()
 
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
-	if (server.IsNull()) { cvarManager->log("init. server is null"); return; }
+	if (server.IsNull()) { return; }
+
+	cvarManager->log("------------------------------------------------");
+	LOG("GetID {}", btos(isRanked(server)));
+	cvarManager->log("------------------------------------------------");
 
 	if (*enableQueue) {
 		queue(server, params, eventName);
-		if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
+		if (server.IsNull()) {  return; }
 	}
 	if (*exitEnabled) {
 		exitGame(server, params, eventName);
-		if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
+		if (server.IsNull()) {  return; }
 	}
 	else {
 		if (*freeplayEnabled) {
 			launchFreeplay(server, params, eventName);
-			if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
+			if (server.IsNull()) {  return; }
 		}
 		else
 			if (*customEnabled) {
 				launchCustomTraining(server, params, eventName);
-				if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
+				if (server.IsNull()) {  return; }
 			}
 			else
 				if (*workshopEnabled) {
 					launchWorkshop(server, params, eventName);
-					if (server.IsNull()) { cvarManager->log("null_pntr"); return; }
+					if (server.IsNull()) { return; }
 				}
 	}
 }
@@ -894,7 +924,7 @@ void PremierSuite::onLoad()
 	);
 
 	disableQueueCasual = std::make_shared<bool>(false);
-	cvarManager->registerCvar("disable_queue_casual", "1", "Don't automatically queue when ending a casual game.").bindTo(disableQueueCasual);
+	cvarManager->registerCvar("disable_queue_casual", "0", "Don't automatically queue when ending a casual game.").bindTo(disableQueueCasual);
 	cvarManager->getCvar("disable_queue_casual").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 		*disableQueueCasual = cvar.getBoolValue();
 		}

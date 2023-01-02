@@ -66,22 +66,23 @@ public:
 	void renderAboutWindow(bool* p_open);
 	void loadFont();
 
-
 	ImFont* myFont;
 
 	virtual void onLoad();
 	static std::string toLower(std::string str, bool changeInline = false);
 	
+	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, void* callback);
+
+
 private:
 
 	bool isWindowOpen_ = false;
 	bool isMinimized = false;
 	std::string menuTitle_ = "PremierSuite " + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
 
-private:
-
 	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
 
+	//bool isRanked(ServerWrapper server);
 	void launchCustomTraining(ServerWrapper caller, void* params, std::string eventName);
 	void launchFreeplay(ServerWrapper caller, void* params, std::string eventName);
 	void launchWorkshop(ServerWrapper caller, void* params, std::string eventName);
@@ -125,6 +126,10 @@ public:
 	void setNewGUIKeybind(std::string newKeybind);
 	void setNewPluginKeybind(std::string newKeybind);
 
+	bool isRanked(ServerWrapper server);
+	bool isPrivate(ServerWrapper server);
+	bool isTournament(ServerWrapper server);
+	bool isStandard(ServerWrapper server);
 
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
 
@@ -148,7 +153,6 @@ public:
 
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
-
 
 private:
 
