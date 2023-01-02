@@ -71,7 +71,7 @@ public:
 	virtual void onLoad();
 	static std::string toLower(std::string str, bool changeInline = false);
 	
-	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, void* callback);
+	
 
 
 private:
@@ -79,32 +79,33 @@ private:
 	bool isWindowOpen_ = false;
 	bool isMinimized = false;
 	std::string menuTitle_ = "PremierSuite " + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
-
+	void checkConflicts();
 	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
 
-	//bool isRanked(ServerWrapper server);
-	void launchCustomTraining(ServerWrapper caller, void* params, std::string eventName);
-	void launchFreeplay(ServerWrapper caller, void* params, std::string eventName);
-	void launchWorkshop(ServerWrapper caller, void* params, std::string eventName);
-	void delayedCustomTraining();
-	void delayedFreeplay();
-	void delayedWorkshop();
+	//-----------------------------------------------------------------------------
+	//--- OnMatchEnd Logic
+	//-----------------------------------------------------------------------------
+	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
+	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue = false);
+
 	void queue(ServerWrapper caller, void* params, std::string eventName);
-	void exitGame(ServerWrapper caller, void* params, std::string eventName);
-	void delayedQueue();
-	void delayedExit();
+
+	void executeWorkshop();
+	void executeCustomTraining();
+	void executeFreeplay();
+	void executeQueue();
+	void executeMainMenu();
+
 	void hookMatchEnded();
 	void unhookMatchEnded();
 	void logHookType(const char* const hookType) const;
-	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
-	void checkConflicts();
 
 public:
 
 	//-----------------------------------------------------------------------------
 	//--- Functions needed in GuiBase.cpp for GUI rendering
 	//-----------------------------------------------------------------------------
-
+	
 	void quickPluginEnabled();
 
 	void setEnablePlugin(std::shared_ptr<bool> newBool);
@@ -179,6 +180,16 @@ private:
 		std::string packAuthor;
 		bool loaded = false;
 	};
+	
+	// Returns a prettified map name converted from rl's internal map string
+	// This will return the original string if it could not be converted.
+	[[nodiscard]] std::string GetDisplayMapName(const std::string& str) const {
+		const auto iter = MAPS.find(str);
+		if (iter == MAPS.end())
+			return str;
+
+		return iter->second;
+	}
 
 	const std::map<std::string, std::string> MAPS{
 		{ "ARC_P",                   "ARCtagon" },

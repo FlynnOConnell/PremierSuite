@@ -92,6 +92,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="IMGUI\imgui.cpp" />
+    <ClCompile Include="IMGUI\imguiComboFilter.cpp" />
     <ClCompile Include="IMGUI\imguivariouscontrols.cpp" />
     <ClCompile Include="IMGUI\imgui_additions.cpp" />
     <ClCompile Include="IMGUI\imgui_demo.cpp" />
@@ -113,6 +114,7 @@
   <ItemGroup>
     <ClInclude Include="IMGUI\imconfig.h" />
     <ClInclude Include="IMGUI\imgui.h" />
+    <ClInclude Include="IMGUI\imguiComboFilter.h" />
     <ClInclude Include="IMGUI\imguivariouscontrols.h" />
     <ClInclude Include="IMGUI\imgui_additions.h" />
     <ClInclude Include="IMGUI\imgui_impl_dx11.h" />

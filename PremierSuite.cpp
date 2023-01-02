@@ -6,7 +6,6 @@
 #include <filesystem>
 #include "PremierSuite.h"
 #include "GuiBase.h"
-//#include "enums.h"
 
 #define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
@@ -16,27 +15,6 @@ std::filesystem::path BakkesModConfigFolder;
 std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
-
-std::shared_ptr<int> numKeybinds;
-
-enum Mode
-{
-	CasualDuel = 1,
-	CasualDoubles = 2,
-	CasualStandard = 3,
-	CasualChaos = 4,
-	Private = 6,
-	RankedDuel = 10,
-	RankedDoubles = 11,
-	RankedSoloStandard = 12,
-	RankedStandard = 13,
-	Tournament = 22,
-	RankedHoops = 27,
-	RankedRumble = 28,
-	RankedDropshot = 29,
-	RankedSnowday = 30,
-};
-
 
 /// <summary>Debug type-helper. Returns the type of the parameter passed.</summary>
 /// <typeparam name="T">Parameter to check.</typeparam>
@@ -218,7 +196,7 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 }
 
 //-----------------------------------------------------------------------------
-//--- Server Hook Setters
+//--- Game Status Functions
 //-----------------------------------------------------------------------------
 
 bool PremierSuite::isRanked(ServerWrapper server) {
@@ -231,288 +209,12 @@ bool PremierSuite::isPrivate(ServerWrapper server) {
 }
 
 bool PremierSuite::isTournament(ServerWrapper server) {
-	return server.GetPlaylist().IsPrivateMatch();
+	return server.GetPlaylist().IsTournamentMatch();
 }
 
 bool PremierSuite::isStandard(ServerWrapper server) {
 	if (server.GetPlaylist().GetbStandard() == 1) { return true; };
 	return false;
-}
-
-void addHandler(std::function<void(int)> callback)
-{
-
-}
-
-
-void PremierSuite::queue(ServerWrapper server, void* params, std::string eventName)
-{
-	float delay = 0;
-	float delay = 0;
-	if (server.IsNull()) { return; }
-	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
-	else { delay = *delayExit; }
-	if (isTournament(server)) {
-		return;
-	}
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
-	{
-		if (isStandard(server) && *disableExitCasual) {
-			return;
-		}
-		if (isPrivate(server) && *disablePrivate) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), delay);
-		}
-	}
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedQueue, this), delay);
-}
-
-void PremierSuite::delayedQueue()
-{
-	auto game = gameWrapper->GetOnlineGame();
-	if (game.IsNull()) { return; }
-	if (!game.IsNull())
-	{
-		if (!game.GetbMatchEnded())
-		{
-			return;
-		}
-	}
-	cvarManager->executeCommand("queue");
-}
-
-void PremierSuite::launchFreeplay(ServerWrapper server, void* params, std::string eventName)
-{
-	float delay = 0;
-	if (server.IsNull()) { return; } 
-	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
-	else { delay = *delayExit; }
-
-	if (isTournament(server)) {
-		return;
-	}
-
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
-	{
-		if (isStandard(server) && *disableExitCasual) {
-			return;
-		}
-		if (isPrivate(server) && *disablePrivate) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), delay);
-		}
-	}
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedFreeplay, this), delay);
-}
-
-void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void(PremierSuite)> &callback) {
-	float delay = 0;
-	if (server.IsNull()) { return; }
-	if (*autoGG) { delay = *delayExit + *autoGGDelay; }
-	else { delay = *delayExit; }
-
-	if (isTournament(server)) {
-		return;
-	}
-	delayedFreeplay();
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual))
-	{
-		if (isStandard(server) && *disableExitCasual) {
-			return;
-		}
-		if (isPrivate(server) && *disablePrivate) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&delayedFreeplay, this), delay);
-		}
-	}
-	gameWrapper->SetTimeout(std::bind(&callback, this), delay);
-
-}
-
-
-void PremierSuite::delayedFreeplay()
-{
-	std::stringstream launchTrainingCommandBuilder;
-	std::string mapname = cvarManager->getCvar("freeplay_map").getStringValue();
-
-	// TODO: Allow random mapname
-	if (mapname.compare("random") == 0)
-	{
-		mapname = gameWrapper->GetRandomMap();
-	}
-
-	launchTrainingCommandBuilder << "start " << mapname << "?Game=TAGame.GameInfo_Tutorial_TA?GameTags=Training";
-	const std::string launchTrainingCommand = launchTrainingCommandBuilder.str();
-	auto game = gameWrapper->GetOnlineGame();
-	if (!game.IsNull())
-	{
-		if (!game.GetbMatchEnded())
-		{
-			return;
-		}
-	}
-	gameWrapper->ExecuteUnrealCommand(launchTrainingCommand);
-}
-
-void PremierSuite::launchCustomTraining(ServerWrapper server, void* params, std::string eventName)
-{
-	float totalCustomTrainingDelayTime = 0;
-	float CustomTrainingDelayTime = cvarManager->getCvar("exit_delay").getFloatValue();
-	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
-	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
-	if (autoGG) {
-		totalCustomTrainingDelayTime = CustomTrainingDelayTime + autoGGDelayTime;
-	}
-	else {
-		totalCustomTrainingDelayTime = CustomTrainingDelayTime;
-	}
-
-	bool disableCasualTraining = cvarManager->getCvar("disable_exit_casual").getBoolValue();
-	bool disablePrivate = cvarManager->getCvar("disable_private").getBoolValue();
-
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (disablePrivate || disableCasualTraining))
-	{
-		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
-
-		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedCustomTraining, this), totalCustomTrainingDelayTime);
-		}
-	}
-
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedCustomTraining, this), totalCustomTrainingDelayTime);
-}
-
-void PremierSuite::delayedCustomTraining()
-{
-	auto game = gameWrapper->GetOnlineGame();
-	auto training_code = cvarManager->getCvar("custom_code").getStringValue();
-
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; }
-
-	if (!game.IsNull())
-	{
-		if (!game.GetbMatchEnded())
-		{
-			return;
-		}
-	}
-
-	cvarManager->executeCommand("load_training " + training_code);
-}
-
-void PremierSuite::launchWorkshop(ServerWrapper server, void* params, std::string eventName)
-{
-	float totalWorkshopDelayTime = 0;
-	float WorkshopDelayTime = cvarManager->getCvar("disable_exit_delay").getFloatValue();
-	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
-	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	if (server.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
-	if (autoGG) {
-		totalWorkshopDelayTime = WorkshopDelayTime + autoGGDelayTime;
-	}
-	else {
-		totalWorkshopDelayTime = WorkshopDelayTime;
-	}
-
-	bool disableCasualTraining = cvarManager->getCvar("disable_exit_casual").getBoolValue();
-	bool disablePrivate = cvarManager->getCvar("disable_private").getBoolValue();
-
-	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (disablePrivate || disableCasualTraining))
-	{
-		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
-
-		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualTraining) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedWorkshop, this), totalWorkshopDelayTime);
-		}
-	}
-
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedWorkshop, this), totalWorkshopDelayTime);
-}
-
-
-void PremierSuite::delayedWorkshop()
-{
-	auto game = gameWrapper->GetOnlineGame();
-	std::string workshop_map = cvarManager->getCvar("workshop_map").getStringValue();
-
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
-	if (!game.IsNull())
-	{
-		if (!game.GetbMatchEnded())
-		{
-			return;
-		}
-	}
-
-	cvarManager->executeCommand("load_workshop " + workshop_map);
-}
-
-void PremierSuite::exitGame(ServerWrapper server, void* params, std::string eventName)
-{
-	float totalExitDelayTime = 0;
-	float exitDelayTime = cvarManager->getCvar("exit_delay").getFloatValue();
-	float autoGGDelayTime = cvarManager->getCvar("ranked_autogg_delay").getFloatValue() / 1000;
-	bool autoGG = cvarManager->getCvar("ranked_autogg").getBoolValue();
-	if (!server) { return; }
-
-	if (autoGG) {
-		totalExitDelayTime = exitDelayTime + autoGGDelayTime;
-	}
-	else {
-		totalExitDelayTime = exitDelayTime;
-	}
-
-	bool disableCasualExit = cvarManager->getCvar("disable_exit_casual").getBoolValue();
-	bool disablePrivate = cvarManager->getCvar("disable_private").getBoolValue();
-
-	if (!server.IsNull() && (disablePrivate || disableCasualExit))
-	{
-		auto playlist = (Mode)server.GetPlaylist().GetPlaylistId();
-
-		if ((playlist == CasualChaos || playlist == CasualDoubles || playlist == CasualDuel || playlist == CasualStandard) && disableCasualExit) {
-			return;
-		}
-		else if ((playlist == Private || playlist == Tournament) && disablePrivate) {
-			return;
-		}
-		else {
-			gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedExit, this), totalExitDelayTime);
-		}
-	}
-
-	gameWrapper->SetTimeout(std::bind(&PremierSuite::delayedExit, this), totalExitDelayTime);
-}
-
-void PremierSuite::delayedExit()
-{
-	auto game = gameWrapper->GetOnlineGame();
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
-
-	if (!game.IsNull())
-	{
-		if (!game.GetbMatchEnded())
-		{
-			return;
-		}
-	}
-	cvarManager->executeCommand("unreal_command disconnect");
 }
 
 //-----------------------------------------------------------------------------
@@ -609,32 +311,12 @@ void PremierSuite::setNewGUIKeybind(std::string newKeybind)
 
 void PremierSuite::setNewPluginKeybind(std::string newKeybind)
 {
-	_globalCvarManager->getCvar("ps_enabled_keybind").setValue(newKeybind);
+	_globalCvarManager->getCvar("ps_toggle_keybind").setValue(newKeybind);
 }
 
 //-----------------------------------------------------------------------------
-//--- Keybind helpers
+//--- Parsers
 //-----------------------------------------------------------------------------
-
-/// <summary>Checks if the GUI window is bound.</summary>
-/// <param name="windowName">Name of the GUI window</param>
-/// <returns>Bool with if the GUI window is bound</returns>
-bool IsGUIWindowBound(const std::string& windowName)
-{
-	const std::string bind = "togglemenu " + windowName;
-	std::ifstream file(BINDS_FILE_PATH);
-	if (file.is_open()) {
-		std::string line;
-		while (getline(file, line)) {
-			if (line.find(bind) != std::string::npos) {
-				file.close();
-				return true;
-			}
-		}
-		file.close();
-	}
-	return false;
-}
 
 // <summary>Return lines containing the given search string.</summary>
 // <param name="searchString">Name of the string to search</param>
@@ -703,7 +385,7 @@ void PremierSuite::handleKeybindCvar() {
 	if ((size_t)pluginKeybinds.size() == 1) {
 		cvarManager->log("Setting toggle plugin keybind from binds.cfg file " + pluginKeybinds[0]);
 		cvarManager->setBind(pluginKeybinds[0], "change_ps_enabled");
-		cvarManager->getCvar("ps_enabled_keybind").setValue(pluginKeybinds[0]);
+		cvarManager->getCvar("ps_toggle_keybind").setValue(pluginKeybinds[0]);
 	}
 	else {
 		bool pluginbound = false;
@@ -712,7 +394,7 @@ void PremierSuite::handleKeybindCvar() {
 				if (bind == "Unset") { cvarManager->removeBind(bind); } //remove unset binding, shouldnt happen
 				else {
 					cvarManager->setBind(bind, "change_ps_enabled");
-					cvarManager->getCvar("ps_enabled_keybind").setValue(bind);
+					cvarManager->getCvar("ps_toggle_keybind").setValue(bind);
 					pluginbound = true;
 				}
 			}
@@ -733,36 +415,136 @@ void PremierSuite::checkConflicts()
 //--- Server Hooks
 //-----------------------------------------------------------------------------
 
+void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue = false) {
+	float delay = 0;
+	float delaySetting;
+	if (server.IsNull()) { return; }
+	if (queue) { float delaySetting = *delayQueue; }
+	else { float delaySetting = *delayExit; };
+	if (*autoGG) { delay = delaySetting + *autoGGDelay; }
+	else { delay = *delayExit; }
+	if (isTournament(server)) {
+		return;
+	}
+	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual)) {
+		if (isStandard(server) && *disableExitCasual) {
+			LOG("Casual exit disabled: returning");
+			return;
+		}
+		if (isPrivate(server) && *disablePrivate) {
+			LOG("private disabled, returning");
+			return;
+		}
+	}
+	gameWrapper->SetTimeout([callback = std::move(callback)](...) {callback(); }, delaySetting);
+}
+
+void PremierSuite::executeQueue()
+{
+	auto game = gameWrapper->GetOnlineGame();
+	if (game.IsNull()) { return; }
+	if (!game.IsNull())
+	{
+		if (!game.GetbMatchEnded())
+		{
+			return;
+		}
+	}
+	cvarManager->executeCommand("queue");
+}
+
+void PremierSuite::executeFreeplay()
+{
+	std::stringstream launchTrainingCommandBuilder;
+	std::string mapname = *freeplayMap;
+
+	if (mapname.compare("random") == 0)
+	{
+		mapname = gameWrapper->GetRandomMap();
+	}
+
+	launchTrainingCommandBuilder << "start " << mapname << "?Game=TAGame.GameInfo_Tutorial_TA?GameTags=Training";
+	const std::string launchTrainingCommand = launchTrainingCommandBuilder.str();
+	auto game = gameWrapper->GetOnlineGame();
+	if (!game.IsNull())
+	{
+		if (!game.GetbMatchEnded())
+		{
+			return;
+		}
+	}
+	gameWrapper->ExecuteUnrealCommand(launchTrainingCommand);
+}
+
+void PremierSuite::executeCustomTraining()
+{
+	auto game = gameWrapper->GetOnlineGame();
+	if (game.IsNull()) { return; }
+
+	if (!game.IsNull())
+	{
+		if (!game.GetbMatchEnded())
+		{
+			return;
+		}
+	}
+	cvarManager->executeCommand("load_training " + *customCode);
+}
+
+void PremierSuite::executeWorkshop()
+{
+	auto game = gameWrapper->GetOnlineGame();
+	std::string workshop_map = cvarManager->getCvar("workshop_map").getStringValue();
+
+	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+
+	if (!game.IsNull())
+	{
+		if (!game.GetbMatchEnded())
+		{
+			return;
+		}
+	}
+
+	cvarManager->executeCommand("load_workshop " + workshop_map);
+}
+
+void PremierSuite::executeMainMenu()
+{
+	auto game = gameWrapper->GetOnlineGame();
+	if (game.IsNull()) { return; }
+
+	if (!game.IsNull())
+	{
+		if (!game.GetbMatchEnded())
+		{
+			return;
+		}
+	}
+	cvarManager->executeCommand("unreal_command disconnect");
+}
+
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
 	if (server.IsNull()) { return; }
 
-	cvarManager->log("------------------------------------------------");
-	LOG("GetID {}", btos(isRanked(server)));
-	cvarManager->log("------------------------------------------------");
-
 	if (*enableQueue) {
 		queue(server, params, eventName);
-		if (server.IsNull()) {  return; }
 	}
 	if (*exitEnabled) {
-		exitGame(server, params, eventName);
-		if (server.IsNull()) {  return; }
+		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); });
 	}
 	else {
 		if (*freeplayEnabled) {
-			launchFreeplay(server, params, eventName);
-			if (server.IsNull()) {  return; }
+			callbackSetDelay(server, params, eventName, [this]() { this->executeFreeplay(); });
 		}
 		else
 			if (*customEnabled) {
-				launchCustomTraining(server, params, eventName);
-				if (server.IsNull()) {  return; }
+				callbackSetDelay(server, params, eventName, [this]() { this->executeCustomTraining(); });
 			}
 			else
 				if (*workshopEnabled) {
-					launchWorkshop(server, params, eventName);
-					if (server.IsNull()) { return; }
+					callbackSetDelay(server, params, eventName, [this]() { this->executeWorkshop(); });
 				}
 	}
 }
@@ -875,8 +657,8 @@ void PremierSuite::onLoad()
 	);
 
 	plugin_keybind = std::make_shared<std::string>("Unset");
-	cvarManager->registerCvar("ps_enabled_keybind", "Unset", "Enable/disable plugin Keybind").bindTo(plugin_keybind);
-	cvarManager->getCvar("ps_enabled_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+	cvarManager->registerCvar("ps_toggle_keybind", "Unset", "Enable/disable plugin Keybind").bindTo(plugin_keybind);
+	cvarManager->getCvar("ps_toggle_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 		*plugin_keybind = cvar.getStringValue();
 		}
 	);
@@ -961,6 +743,36 @@ void PremierSuite::onLoad()
 
 
 	}, "", PERMISSION_ALL);
+
+	cvarManager->registerNotifier("ps_evaluate", [this](std::vector<std::string> args) {
+		LOG("BOOLS--------------------------");
+		LOG("Plugin enabled: {}", btos(cvarManager->getCvar("plugin_enabled").getBoolValue()));
+		LOG(btos(*enabled));
+		LOG("Freeplay enabled: {}", btos(cvarManager->getCvar("freeplay_enabled").getBoolValue()));
+		LOG(btos(*freeplayEnabled));
+		LOG("CustomT enabled: {}", btos(cvarManager->getCvar("custom_enabled").getBoolValue()));
+		LOG(btos(*customEnabled));
+		LOG("Exit enabled: {}", btos(cvarManager->getCvar("exit_enabled").getBoolValue()));
+		LOG(btos(*exitEnabled));
+		LOG("Disable Private: {}", btos(cvarManager->getCvar("disable_private").getBoolValue()));
+		LOG(btos(*disablePrivate));
+		LOG("Queue enabled: {}", btos(cvarManager->getCvar("queue_enabled").getBoolValue()));
+		LOG(btos(*enableQueue));
+		LOG("Queue Disabled Casual: {}", btos(cvarManager->getCvar("disable_queue_casual").getBoolValue()));
+		LOG(btos(*disableQueueCasual));
+		LOG("exit Disabled Casual: {}", btos(cvarManager->getCvar("disable_exit_casual").getBoolValue()));
+		LOG(btos(*disableExitCasual));
+		LOG("STRINGS-------------------------");
+		LOG("GUI Keybind: {}", cvarManager->getCvar("ps_gui_keybind").getStringValue());
+		LOG(*gui_keybind);
+		LOG("Plugin Keybind: {}", cvarManager->getCvar("ps_toggle_keybind").getStringValue());
+		LOG(*plugin_keybind);
+		LOG("Freeplay Map: {}", cvarManager->getCvar("freeplay_map").getStringValue());
+		LOG(*freeplayMap);
+		LOG("Custom Code: {}", cvarManager->getCvar("custom_code").getStringValue());
+		LOG(*customCode);
+
+		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("change_ps_enabled", [this](std::vector<std::string> args) {
 
