@@ -5,6 +5,7 @@
 #include "IMGUI/imgui_internal.h"
 #include "IMGUI/imgui_stdlib.h"
 #include "bakkesmod/wrappers/GuiManagerWrapper.h"
+#include "IMGUI/imguiComboFilter.h"
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
@@ -396,6 +397,43 @@ void PremierSuite::renderSettingsTab()
 		//-----------------------------------------------------------------------------
 		// Auto-Exit
 		//-----------------------------------------------------------------------------
+		const char* hints[] = {
+				"AnimGraphNode_CopyBone",
+				"ce skipaa",
+				"ce skipscreen",
+				"ce skipsplash",
+				"ce skipsplashscreen",
+				"client_unit.cpp",
+				"letrograd",
+				"level",
+				"leveler",
+				"MacroCallback.cpp",
+				"Miskatonic university",
+				"MockAI.h",
+				"MockGameplayTasks.h",
+				"MovieSceneColorTrack.cpp",
+				"r.maxfps",
+				"r.maxsteadyfps",
+				"reboot",
+				"rescale",
+				"reset",
+				"resource",
+				"restart",
+				"retrocomputer",
+				"retrograd",
+				"return",
+				"slomo 10",
+				"SVisualLoggerLogsList.h",
+				"The Black Knight",
+		};
+		static ImGui::ComboFilterState s = { 0, false };
+		static char buf[128];
+		static bool once = false;
+		if (!once) {
+			memcpy(buf, hints[0], strlen(hints[0]) + 1);
+			once = true;
+		}
+		
 
 
 		ImGui::Text("Auto-Exit Options");
@@ -415,6 +453,10 @@ void PremierSuite::renderSettingsTab()
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Instant-exit to Freeplay.\n");
+		ImGui::SameLine();
+		if (ImGui::ComboFilter("Map Selector", buf, IM_ARRAYSIZE(buf), hints, IM_ARRAYSIZE(hints), s, NULL)) {
+			LOG("Mymap", buf);
+		}
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		
