@@ -195,6 +195,31 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 	return workshopMaps;
 }
 
+
+const char* PremierSuite::convert(const std::string& s)
+{
+	return s.c_str();
+}
+
+// call this once, onload
+[[nodiscard]] std::vector<const char*> PremierSuite::GetFreeplayMapCodes() const
+{
+	auto kv = std::views::values(FreeplayMaps);
+	std::vector<std::string> keys{ kv.begin(), kv.end() };
+
+	std::vector<const char*>  vc;
+	std::transform(keys.begin(), keys.end(), std::back_inserter(vc), convert);
+	
+	return vc;
+}
+
+[[nodiscard]] std::string PremierSuite::GetFreeplayMapName(const std::string& str) const {
+	const auto iter = FreeplayMaps.find(str);
+	if (iter == FreeplayMaps.end())
+		return str;
+	return iter->second;
+};
+
 //-----------------------------------------------------------------------------
 //--- Game Status Functions
 //-----------------------------------------------------------------------------
@@ -215,6 +240,11 @@ bool PremierSuite::isTournament(ServerWrapper server) {
 bool PremierSuite::isStandard(ServerWrapper server) {
 	if (server.GetPlaylist().GetbStandard() == 1) { return true; };
 	return false;
+}
+
+std::string PremierSuite::getInGameMap()
+{
+	return gameWrapper->GetCurrentMap();
 }
 
 //-----------------------------------------------------------------------------
@@ -302,6 +332,12 @@ void PremierSuite::setCustomTrainingCode(char newCode)
 void PremierSuite::setCustomTrainingCode(std::string newCode)
 {
 	_globalCvarManager->getCvar("custom_code").setValue(newCode);
+}
+
+void PremierSuite::setFreeplayMap(const char* newMap)
+{
+	if (!newMap) { return; LOG("Undefined, null newMap"); };
+	_globalCvarManager->getCvar("freeplay_map").setValue(*newMap);
 }
 
 void PremierSuite::setNewGUIKeybind(std::string newKeybind)
@@ -573,13 +609,7 @@ void PremierSuite::logHookType(const char* const hookType) const
 void PremierSuite::onLoad()
 {
 	_globalCvarManager = cvarManager;
-
-	//-----------------------------------------------------------------------------
-	// File Helper Cvars
-	//-----------------------------------------------------------------------------
-
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
-
 	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"premiersuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
@@ -587,145 +617,41 @@ void PremierSuite::onLoad()
 
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
-	//-----------------------------------------------------------------------------
-	// CVar registration
-	//-----------------------------------------------------------------------------
+	// Initialize map codes one time and point to them
+	std::vector<const char*> codes = GetFreeplayMapCodes();
+	// freeplayMapCodes = std::make_shared<std::vector<const char*>>(codes);
 
-	enabled = std::make_shared<bool>(true);
-	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite").bindTo(enabled);
-	cvarManager->getCvar("plugin_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*enabled = cvar.getBoolValue();
-		}
-	);
+	registerCvars();
+	registerNotifiers();
 
-	enableQueue = std::make_shared<bool>(false);
-	cvarManager->registerCvar("queue_enabled", "1", "Don't automatically queue when ending a casual game.").bindTo(enableQueue);
-	cvarManager->getCvar("queue_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*enableQueue = cvar.getBoolValue();
-		}
-	);
+	gameWrapper->SetTimeout([this](GameWrapper* gw) { this->handleKeybindCvar(); }, 1);
 
-	autoGG = std::make_shared<bool>(false);
-	cvarManager->registerCvar("ranked_autogg", "0", "Automatically say GG after the game.").bindTo(autoGG);
-	cvarManager->getCvar("ranked_autogg").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*autoGG = cvar.getBoolValue();
-		}
-	);
+	hookMatchEnded();
+}
 
-	autoGGDelay = std::make_shared<float>(1);
-	cvarManager->registerCvar("ranked_autogg_delay", "0", "Delay for GG after the game.", true, true, 0, true, 5).bindTo(autoGGDelay);
-	cvarManager->getCvar("ranked_autogg_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*autoGGDelay = cvar.getFloatValue();
-		}
-	);
+//std::vector<char*> PremierSuite::strlist(std::vector<std::string>& input) {
+//	std::vector<char*> result;
+//
+//	// remember the nullptr terminator
+//	result.reserve(input.size() + 1);
+//
+//	std::transform(begin(input), end(input),
+//		std::back_inserter(result),
+//		[](std::string& s) { return s.data(); }
+//	);
+//	result.push_back(nullptr);
+//	return result;
+//}
 
-	freeplayEnabled = std::make_shared<bool>(false);
-	cvarManager->registerCvar("freeplay_enabled", "0", "Enable Instant Exit -> Freeplay").bindTo(freeplayEnabled);
-	cvarManager->getCvar("freeplay_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			*freeplayEnabled = cvar.getBoolValue();
+void PremierSuite::logVector(std::vector<std::string> inputVec)
+{
+	for (std::vector<std::string>::iterator t = inputVec.begin(); t != inputVec.end(); ++t)
+	{
+		LOG("{}", *t);
+	}
+}
 
-		}
-	);
-
-	customEnabled = std::make_shared<bool>(false);
-	cvarManager->registerCvar("custom_enabled", "0", "Enable Instant Exit -> Custom Training").bindTo(customEnabled);
-	cvarManager->getCvar("custom_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*customEnabled = cvar.getBoolValue();
-
-		}
-	);
-
-	exitEnabled = std::make_shared<bool>(false);
-	cvarManager->registerCvar("exit_enabled", "0", "Enable Instant Exit -> Main Menu").bindTo(exitEnabled);
-	cvarManager->getCvar("exit_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			*exitEnabled = cvar.getBoolValue();
-		}
-	);
-
-	workshopEnabled = std::make_shared<bool>(false);
-	cvarManager->registerCvar("workshop_enabled", "0", "Enable Instant Exit -> Main Menu").bindTo(workshopEnabled);
-	cvarManager->getCvar("workshop_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			*workshopEnabled = cvar.getBoolValue();
-		}
-	);
-
-	gui_keybind = std::make_shared<std::string>("F3");
-	cvarManager->registerCvar("ps_gui_keybind", "F3", "Keybind to open the GUI").bindTo(gui_keybind);
-	cvarManager->getCvar("ps_gui_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			*gui_keybind = cvar.getStringValue();
-		}
-	);
-
-	plugin_keybind = std::make_shared<std::string>("Unset");
-	cvarManager->registerCvar("ps_toggle_keybind", "Unset", "Enable/disable plugin Keybind").bindTo(plugin_keybind);
-	cvarManager->getCvar("ps_toggle_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*plugin_keybind = cvar.getStringValue();
-		}
-	);
-
-	customCode = std::make_shared<std::string>("A0FE-F860-967D-E628"); //TODO: check which sets default val
-	cvarManager->registerCvar("custom_code", "A0FE-F860-967D-E628", "Custom-training code.").bindTo(customCode);
-	cvarManager->getCvar("custom_code").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-			*customCode = cvar.getStringValue();
-		}
-	);
-
-	disablePrivate = std::make_shared<bool>(true);
-	cvarManager->registerCvar("disable_private", "1", "Disable plugin during Private, Tournament, and Heatseeker matches.").bindTo(disablePrivate);
-	cvarManager->getCvar("disable_private").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*disablePrivate = cvar.getBoolValue();
-		}
-	);
-
-	delayExit = std::make_shared<float>(0);
-	cvarManager->registerCvar("exit_delay", "0", "Seconds to wait before loading into training mode (0 to 10 seconds).", true, true, 0, true, 10).bindTo(delayExit);
-	cvarManager->getCvar("exit_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*delayExit = cvar.getFloatValue();
-		}
-	);
-
-	delayQueue = std::make_shared<float>(0);
-	cvarManager->registerCvar("queue_delay", "0", "Seconds to wait before starting queue (0 to 10 seconds).", true, true, 0, true, 10).bindTo(delayQueue);
-	cvarManager->getCvar("queue_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*delayQueue = cvar.getFloatValue();
-		}
-	);
-
-	freeplayMap = std::make_shared<std::string>("Beckwith Park (Stormy)");
-	cvarManager->registerCvar("freeplay_map", "Beckwith Park (Stormy)", "Determines the map that will launch for training.").bindTo(freeplayMap);
-	cvarManager->getCvar("freeplay_map").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*freeplayMap = cvar.getStringValue();
-		}
-	);
-
-	disableExitCasual = std::make_shared<bool>(false);
-	cvarManager->registerCvar("disable_exit_casual", "1", "Don't automatically exit when ending a casual game.").bindTo(disableExitCasual);
-	cvarManager->getCvar("disable_exit_casual").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*disableExitCasual = cvar.getBoolValue();
-		}
-	);
-
-	disableQueueCasual = std::make_shared<bool>(false);
-	cvarManager->registerCvar("disable_queue_casual", "0", "Don't automatically queue when ending a casual game.").bindTo(disableQueueCasual);
-	cvarManager->getCvar("disable_queue_casual").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*disableQueueCasual = cvar.getBoolValue();
-		}
-	);
-
-	workshopMap = std::make_shared<std::string>();
-	cvarManager->registerCvar("workshop_map", "", "Map to load into workshop.", true, true, 0, true, 1).bindTo(workshopMap);
-	cvarManager->getCvar("workshop_map").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*workshopMap = cvar.getStringValue();
-		}
-	);
-
-	workshopMapDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
-		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
-
-	customMapDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("ps_custom_path", CUSTOM_MAPS_PATH.string(),
-		"Default path for your custom maps directory").bindTo(customMapDirPath);
+void PremierSuite::registerNotifiers() {
 
 	cvarManager->registerNotifier("keybind_notification", [this](std::vector<std::string> args) {
 		std::string keybind;
@@ -739,52 +665,232 @@ void PremierSuite::onLoad()
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("debug", [this](std::vector<std::string> args) {
-		cvarManager->log(*plugin_keybind);
 
+		//std::vector<const char*> maps = GetFreeplayMapCodes();
+		//const char* mapChars = maps[0];
+		//unsigned long long mapsize = sizeof(mapChars);
+		//for (int n = 0; n < maps.size(); n++)
+		//{
+		//	const char* thismap = maps[n];
+		//	LOG("C_str | n | maps[n]: {}, {}, {}", thismap, std::to_string(n), maps[n]);
+		//}
 
-	}, "", PERMISSION_ALL);
+		//logVector(maps);
+
+		}, "", PERMISSION_ALL);
+
+	cvarManager->registerNotifier("ps_get_map", [this](std::vector<std::string> args) {
+
+		std::string map = getInGameMap();
+			LOG("Current Map: {}", map);
+		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("ps_evaluate", [this](std::vector<std::string> args) {
 		LOG("BOOLS--------------------------");
-		LOG("Plugin enabled: {}", btos(cvarManager->getCvar("plugin_enabled").getBoolValue()));
-		LOG(btos(*enabled));
-		LOG("Freeplay enabled: {}", btos(cvarManager->getCvar("freeplay_enabled").getBoolValue()));
-		LOG(btos(*freeplayEnabled));
-		LOG("CustomT enabled: {}", btos(cvarManager->getCvar("custom_enabled").getBoolValue()));
-		LOG(btos(*customEnabled));
-		LOG("Exit enabled: {}", btos(cvarManager->getCvar("exit_enabled").getBoolValue()));
-		LOG(btos(*exitEnabled));
-		LOG("Disable Private: {}", btos(cvarManager->getCvar("disable_private").getBoolValue()));
-		LOG(btos(*disablePrivate));
-		LOG("Queue enabled: {}", btos(cvarManager->getCvar("queue_enabled").getBoolValue()));
-		LOG(btos(*enableQueue));
-		LOG("Queue Disabled Casual: {}", btos(cvarManager->getCvar("disable_queue_casual").getBoolValue()));
-		LOG(btos(*disableQueueCasual));
-		LOG("exit Disabled Casual: {}", btos(cvarManager->getCvar("disable_exit_casual").getBoolValue()));
-		LOG(btos(*disableExitCasual));
-		LOG("STRINGS-------------------------");
-		LOG("GUI Keybind: {}", cvarManager->getCvar("ps_gui_keybind").getStringValue());
-		LOG(*gui_keybind);
-		LOG("Plugin Keybind: {}", cvarManager->getCvar("ps_toggle_keybind").getStringValue());
-		LOG(*plugin_keybind);
-		LOG("Freeplay Map: {}", cvarManager->getCvar("freeplay_map").getStringValue());
-		LOG(*freeplayMap);
-		LOG("Custom Code: {}", cvarManager->getCvar("custom_code").getStringValue());
-		LOG(*customCode);
+			LOG("Plugin enabled: {}", btos(cvarManager->getCvar("plugin_enabled").getBoolValue()));
+			LOG(btos(*enabled));
+			LOG("Freeplay enabled: {}", btos(cvarManager->getCvar("freeplay_enabled").getBoolValue()));
+			LOG(btos(*freeplayEnabled));
+			LOG("CustomT enabled: {}", btos(cvarManager->getCvar("custom_enabled").getBoolValue()));
+			LOG(btos(*customEnabled));
+			LOG("Exit enabled: {}", btos(cvarManager->getCvar("exit_enabled").getBoolValue()));
+			LOG(btos(*exitEnabled));
+			LOG("Disable Private: {}", btos(cvarManager->getCvar("disable_private").getBoolValue()));
+			LOG(btos(*disablePrivate));
+			LOG("Queue enabled: {}", btos(cvarManager->getCvar("queue_enabled").getBoolValue()));
+			LOG(btos(*enableQueue));
+			LOG("Queue Disabled Casual: {}", btos(cvarManager->getCvar("disable_queue_casual").getBoolValue()));
+			LOG(btos(*disableQueueCasual));
+			LOG("exit Disabled Casual: {}", btos(cvarManager->getCvar("disable_exit_casual").getBoolValue()));
+			LOG(btos(*disableExitCasual));
+			LOG("STRINGS-------------------------");
+			LOG("GUI Keybind: {}", cvarManager->getCvar("ps_gui_keybind").getStringValue());
+			LOG(*gui_keybind);
+			LOG("Plugin Keybind: {}", cvarManager->getCvar("ps_toggle_keybind").getStringValue());
+			LOG(*plugin_keybind);
+			LOG("Freeplay Map: {}", cvarManager->getCvar("freeplay_map").getStringValue());
+			LOG(*freeplayMap);
+			LOG("Custom Code: {}", cvarManager->getCvar("custom_code").getStringValue());
+			LOG(*customCode);
 
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("change_ps_enabled", [this](std::vector<std::string> args) {
 
-			quickPluginEnabled();
-	
+		quickPluginEnabled();
+
 		}, "", PERMISSION_ALL);
 
-	gameWrapper->SetTimeout([this](GameWrapper* gw)
-		{
-			this->handleKeybindCvar();
 
-		}, 1);
-	hookMatchEnded();
+};
+
+void PremierSuite::registerCvars() {
+
+	//-----------------------------------------------------------------------------
+	// Enable / Disable Feature (BOOL) --------------------------------------------
+	//-----------------------------------------------------------------------------
+
+	// whole plugin
+	enabled = std::make_shared<bool>(true);
+	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite").bindTo(enabled);
+	cvarManager->getCvar("plugin_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*enabled = cvar.getBoolValue();
+		}
+	);
+
+	// queue
+	enableQueue = std::make_shared<bool>(false);
+	cvarManager->registerCvar("queue_enabled", "1", "Don't automatically queue when ending a casual game.").bindTo(enableQueue);
+	cvarManager->getCvar("queue_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*enableQueue = cvar.getBoolValue();
+		}
+	);
+
+	// freeplay
+	freeplayEnabled = std::make_shared<bool>(false);
+	cvarManager->registerCvar("freeplay_enabled", "0", "Enable Instant Exit -> Freeplay").bindTo(freeplayEnabled);
+	cvarManager->getCvar("freeplay_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*freeplayEnabled = cvar.getBoolValue();
+
+		}
+	);
+
+	// custom-training
+	customEnabled = std::make_shared<bool>(false);
+	cvarManager->registerCvar("custom_enabled", "0", "Enable Instant Exit -> Custom Training").bindTo(customEnabled);
+	cvarManager->getCvar("custom_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*customEnabled = cvar.getBoolValue();
+
+		}
+	);
+
+	// main-menu
+	exitEnabled = std::make_shared<bool>(false);
+	cvarManager->registerCvar("exit_enabled", "0", "Enable Instant Exit -> Main Menu").bindTo(exitEnabled);
+	cvarManager->getCvar("exit_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*exitEnabled = cvar.getBoolValue();
+		}
+	);
+
+	// workshop
+	workshopEnabled = std::make_shared<bool>(false);
+	cvarManager->registerCvar("workshop_enabled", "0", "Enable Instant Exit -> Main Menu").bindTo(workshopEnabled);
+	cvarManager->getCvar("workshop_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*workshopEnabled = cvar.getBoolValue();
+		}
+	);
+
+	// disable-private
+	disablePrivate = std::make_shared<bool>(true);
+	cvarManager->registerCvar("disable_private", "1", "Disable plugin during Private, Tournament, and Heatseeker matches.").bindTo(disablePrivate);
+	cvarManager->getCvar("disable_private").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*disablePrivate = cvar.getBoolValue();
+		}
+	);
+
+	// disable-exit-casual
+	disableExitCasual = std::make_shared<bool>(false);
+	cvarManager->registerCvar("disable_exit_casual", "1", "Don't automatically exit when ending a casual game.").bindTo(disableExitCasual);
+	cvarManager->getCvar("disable_exit_casual").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*disableExitCasual = cvar.getBoolValue();
+		}
+	);
+
+	// auto-gg
+	autoGG = std::make_shared<bool>(false);
+	cvarManager->registerCvar("ranked_autogg", "0", "Automatically say GG after the game.").bindTo(autoGG);
+	cvarManager->getCvar("ranked_autogg").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*autoGG = cvar.getBoolValue();
+		}
+	);
+
+	// disable-queue-casual
+	disableQueueCasual = std::make_shared<bool>(false);
+	cvarManager->registerCvar("disable_queue_casual", "0", "Don't automatically queue when ending a casual game.").bindTo(disableQueueCasual);
+	cvarManager->getCvar("disable_queue_casual").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*disableQueueCasual = cvar.getBoolValue();
+		}
+	);
+
+	//-----------------------------------------------------------------------------
+	// Keybinds | Codes | Maps (STRING) -------------------------------------------
+	//-----------------------------------------------------------------------------
+
+	// gui keybind
+	gui_keybind = std::make_shared<std::string>("F3");
+	cvarManager->registerCvar("ps_gui_keybind", "F3", "Keybind to open the GUI").bindTo(gui_keybind);
+	cvarManager->getCvar("ps_gui_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*gui_keybind = cvar.getStringValue();
+		}
+	);
+
+	// plugin keybind
+	plugin_keybind = std::make_shared<std::string>("Unset");
+	cvarManager->registerCvar("ps_toggle_keybind", "Unset", "Enable/disable plugin Keybind").bindTo(plugin_keybind);
+	cvarManager->getCvar("ps_toggle_keybind").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*plugin_keybind = cvar.getStringValue();
+		}
+	);
+
+	// custom-training code
+	customCode = std::make_shared<std::string>("A0FE-F860-967D-E628"); //TODO: check which sets default val
+	cvarManager->registerCvar("custom_code", "A0FE-F860-967D-E628", "Custom-training code.").bindTo(customCode);
+	cvarManager->getCvar("custom_code").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*customCode = cvar.getStringValue();
+		}
+	);
+
+	// freeplay map
+	freeplayMap = std::make_shared<std::string>("Beckwith Park (Stormy)");
+	cvarManager->registerCvar("freeplay_map", "Beckwith Park (Stormy)", "Determines the map (code, not name) that will launch for training.").bindTo(freeplayMap);
+	cvarManager->getCvar("freeplay_map").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*freeplayMap = cvar.getStringValue();
+		}
+	);
+
+	// workshop map
+	workshopMap = std::make_shared<std::string>();
+	cvarManager->registerCvar("workshop_map", "", "Map to load into workshop.", true, true, 0, true, 1).bindTo(workshopMap);
+	cvarManager->getCvar("workshop_map").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*workshopMap = cvar.getStringValue();
+		}
+	);
+
+	// workshop directory path
+	workshopMapDirPath = std::make_shared<std::string>();
+	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
+		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
+
+	// custom maps directory path
+	customMapDirPath = std::make_shared<std::string>();
+	cvarManager->registerCvar("ps_custom_path", CUSTOM_MAPS_PATH.string(),
+		"Default path for your custom maps directory").bindTo(customMapDirPath);
+
+	//-----------------------------------------------------------------------------
+	// Timeout Delays (FLOAT) -----------------------------------------------------
+	//-----------------------------------------------------------------------------
+
+	// exit delay
+	delayExit = std::make_shared<float>(0);
+	cvarManager->registerCvar("exit_delay", "0", "Seconds to wait before loading into training mode (0 to 10 seconds).", true, true, 0, true, 10).bindTo(delayExit);
+	cvarManager->getCvar("exit_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*delayExit = cvar.getFloatValue();
+		}
+	);
+
+	// queue delay
+	delayQueue = std::make_shared<float>(0);
+	cvarManager->registerCvar("queue_delay", "0", "Seconds to wait before starting queue (0 to 10 seconds).", true, true, 0, true, 10).bindTo(delayQueue);
+	cvarManager->getCvar("queue_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*delayQueue = cvar.getFloatValue();
+		}
+	);
+
+	// autoGG delay
+	autoGGDelay = std::make_shared<float>(1);
+	cvarManager->registerCvar("ranked_autogg_delay", "0", "Delay for GG after the game.", true, true, 0, true, 5).bindTo(autoGGDelay);
+	cvarManager->getCvar("ranked_autogg_delay").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*autoGGDelay = cvar.getFloatValue();
+		}
+	);
 }
-
