@@ -397,45 +397,6 @@ void PremierSuite::renderSettingsTab()
 		//-----------------------------------------------------------------------------
 		// Auto-Exit
 		//-----------------------------------------------------------------------------
-		const char* hints[] = {
-				"AnimGraphNode_CopyBone",
-				"ce skipaa",
-				"ce skipscreen",
-				"ce skipsplash",
-				"ce skipsplashscreen",
-				"client_unit.cpp",
-				"letrograd",
-				"level",
-				"leveler",
-				"MacroCallback.cpp",
-				"Miskatonic university",
-				"MockAI.h",
-				"MockGameplayTasks.h",
-				"MovieSceneColorTrack.cpp",
-				"r.maxfps",
-				"r.maxsteadyfps",
-				"reboot",
-				"rescale",
-				"reset",
-				"resource",
-				"restart",
-				"retrocomputer",
-				"retrograd",
-				"return",
-				"slomo 10",
-				"SVisualLoggerLogsList.h",
-				"The Black Knight",
-		};
-		static ImGui::ComboFilterState s = { 0, false };
-		static char buf[128];
-		static bool once = false;
-		if (!once) {
-			memcpy(buf, hints[0], strlen(hints[0]) + 1);
-			once = true;
-		}
-		
-
-
 		ImGui::Text("Auto-Exit Options");
 		ImGui::SameLine();
 		ImGui::TextDisabled("(?)");
@@ -454,9 +415,26 @@ void PremierSuite::renderSettingsTab()
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Instant-exit to Freeplay.\n");
 		ImGui::SameLine();
-		if (ImGui::ComboFilter("Map Selector", buf, IM_ARRAYSIZE(buf), hints, IM_ARRAYSIZE(hints), s, NULL)) {
-			LOG("Mymap", buf);
-		}
+
+		//std::vector<const char*> codes = GetFreeplayMapCodes();
+
+	/*	std::vector<const char*> mapcodes = *freeplayMapCodes;
+		std::string currentMap = *freeplayMap;
+		const char* selection = currentMap.c_str();
+
+		if (ImGui::BeginCombo("Freeplay Selector", selection, 0))
+		{
+			for (int n = 0; n < maps.size(); n++)
+			{
+				bool is_selected = (selection == mapcodes[n]);
+				if (ImGui::Selectable((char*)mapcodes[n], is_selected))
+					selection = mapcodes[n];
+					setFreeplayMap(selection);
+				if (is_selected)
+					ImGui::SetItemDefaultFocus();  
+			}
+			ImGui::EndCombo();
+		}*/
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		
@@ -468,8 +446,6 @@ void PremierSuite::renderSettingsTab()
 			ImGui::SetTooltip("Instant-exit to Custom Training.\n");
 		ImGui::SameLine(150);
 		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f);
-		// todo: wire previous submitions to config for history callback 
-		// luckily no resizing of strings here. Always will be buffsize[20]
 		ImGui::PushID(14);
 
 		std::string str0 = std::string();
@@ -488,6 +464,7 @@ void PremierSuite::renderSettingsTab()
 				"This is one I made.  :) \n\n\n"
 				"...its hard"
 		);
+
 		ImGui::PopID();
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
