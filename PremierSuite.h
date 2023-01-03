@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ranges>
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
@@ -51,6 +52,8 @@ public:
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::shared_ptr<std::string> customMapDirPath;
 	
+	std::shared_ptr<std::vector<const char*>> freeplayMapCodes;
+
 	std::string GetMenuName() override;
 	std::string GetMenuTitle() override;
 	void SetImGuiContext(uintptr_t ctx) override;
@@ -94,6 +97,8 @@ private:
 	void executeQueue();
 	void executeMainMenu();
 
+	void registerNotifiers();
+	void registerCvars();
 	void hookMatchEnded();
 	void unhookMatchEnded();
 	void logHookType(const char* const hookType) const;
@@ -124,12 +129,13 @@ public:
 	void setCustomTrainingCode(std::string newStr);
 	void setNewGUIKeybind(std::string newKeybind);
 	void setNewPluginKeybind(std::string newKeybind);
+	void setFreeplayMap(const char* newMap);
 
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
 	bool isTournament(ServerWrapper server);
 	bool isStandard(ServerWrapper server);
-
+	std::string getInGameMap();
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
 
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath,
@@ -142,17 +148,12 @@ public:
 		std::string Title;
 		uint64_t owner = 0;
 	};
-	struct FreeplayMap {
-		std::string Title;
-		uint64_t owner = 0;
-	};
 
 	std::vector<uint64_t> publishedFileID;
 	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
 
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
-	std::unordered_map<uint64_t, FreeplayMap> freeplayMaps;
-
+	
 private:
 
 	void handleKeybindCvar();
@@ -171,57 +172,39 @@ private:
 	std::map<std::string, std::string> maps;
 	// Maps path to display name 
 	std::map<std::filesystem::path, std::string> customMapPaths;
-
-	struct PackInfo {
-		std::string packName;
-		std::string packCode;
-		std::string packAuthor;
-		bool loaded = false;
-	};
 	
 	// Returns a prettified map name converted from rl's internal map string
 	// This will return the original string if it could not be converted.
-	[[nodiscard]] std::string GetDisplayMapName(const std::string& str) const {
-		const auto iter = MAPS.find(str);
-		if (iter == MAPS.end())
-			return str;
+	// Really need a return value here, otherwise iterating the map will = empty string = undefined behavior
+	
 
-		return iter->second;
-	}
+public:
+	const char* convert(const std::string& s);
+	void logVector(std::vector<std::string> inputVec);
+	//std::vector<const char*> strlist(std::vector<std::string>& input);
+	[[nodiscard]] std::vector<const char*> GetFreeplayMapCodes() const;
+	[[nodiscard]] std::string GetFreeplayMapName(const std::string& str) const;
 
-	const std::map<std::string, std::string> MAPS{
-		{ "ARC_P",                   "ARCtagon" },
+
+	const std::map<std::string, std::string> FreeplayMaps{
 		{ "CHN_Stadium_Day_P",       "Forbidden Temple (Day)" },
 		{ "CHN_Stadium_P",           "Forbidden Temple" },
 		{ "EuroStadium_Night_P",     "Mannfield (Night)" },
 		{ "EuroStadium_P",           "Mannfield" },
 		{ "EuroStadium_Rainy_P",     "Mannfield (Stormy)" },
 		{ "Farm_Night_P",            "Farmstead (Night)" },
-		{ "Haunted_TrainStation_P",  "Urban Central (Haunted)" },
-		{ "HoopsStadium_P",          "Dunk House" },
-		{ "Labs_Basin_P",            "Basin" },
-		{ "Labs_CirclePillars_P",    "Pillars" },
-		{ "Labs_Corridor_P",         "Corridor" },
-		{ "Labs_Cosmic_P",           "Cosmic (Old)" },
-		{ "Labs_Cosmic_V4_P",        "Cosmic (New)" },
-		{ "Labs_DoubleGoal_P",       "Double Goal (Old)" },
-		{ "Labs_DoubleGoal_V2_P",    "Double Goal (New)" },
-		{ "Labs_Galleon_Mast_P",     "Galleon Retro" },
-		{ "Labs_Galleon_P",          "Galleon" },
-		{ "Labs_Octagon_02_P",       "Octagon (New)" },
-		{ "Labs_Octagon_P",          "Octagon (Old)" },
-		{ "Labs_Underpass_P",        "Underpass" },
-		{ "Labs_Utopia_P",           "Utopia Retro" },
-		{ "NeoTokyo_P",              "Tokyo Underpass" },
+		{ "HoopsStadium_P",          "Dunk House (Hoops)" },
+		{ "hoopsStreet_p",			 "The Block (Hoops"},
 		{ "NeoTokyo_Standard_P",     "Neo Tokyo" },
 		{ "Park_Night_P",            "Beckwith Park (Midnight)" },
 		{ "Park_P",                  "Beckwith Park" },
 		{ "Park_Rainy_P",            "Beckwith Park (Stormy)" },
-		{ "ShatterShot_P",           "Core 707" },
+		{ "ShatterShot_P",           "Core 707 (DropShot)" },
 		{ "Stadium_Foggy_P",         "DFH Stadium (Stormy)" },
 		{ "Stadium_P",               "DFH Stadium" },
 		{ "Stadium_Race_Day_p",      "DFH Stadium (Circuit)" },
 		{ "Stadium_Winter_P",        "DFH Stadium (Snowy)" },
+		{ "street_p",				 "Sovereign Heights" },
 		{ "TrainStation_Dawn_P",     "Urban Central (Dawn)" },
 		{ "TrainStation_Night_P",    "Urban Central (Night)" },
 		{ "TrainStation_P",          "Urban Central" },
@@ -229,28 +212,17 @@ private:
 		{ "UtopiaStadium_Dusk_P",    "Utopia Coliseum (Dusk)" },
 		{ "UtopiaStadium_P",         "Utopia Coliseum" },
 		{ "UtopiaStadium_Snow_P",    "Utopia Coliseum (Snowy)" },
-		{ "Wasteland_Night_P",       "Badlands (Night)" },
-		{ "Wasteland_P",             "Badlands" },
-		{ "arc_standard_p",          "Starbase ARC" },
-		{ "bb_p",                    "Champions Field (NFL)" },
-		{ "beach_P",                 "Salty Shores" },
 		{ "beach_night_p",           "Salty Shores (Night)" },
 		{ "cs_day_p",                "Champions Field (Day)" },
 		{ "cs_hw_p",                 "Rivals Arena" },
 		{ "cs_p",                    "Champions Field" },
-		{ "eurostadium_snownight_p", "Mannfield (Snowy)" },
 		{ "farm_p",                  "Farmstead" },
 		{ "music_p",                 "Neon Fields" },
 		{ "stadium_day_p",           "DFH Stadium (Day)" },
-		{ "throwbackhockey_p",       "Throwback Stadium (Snowy)" },
 		{ "throwbackstadium_P",      "Throwback Stadium" },
 		{ "wasteland_Night_S_P",     "Wasteland (Night)" },
-		{ "wasteland_s_p",           "Wasteland" }
 	};
 
 	const std::vector<std::string> beforeSelect = { "Select Workshop Map" };
-	const std::vector<std::string> beforeFreeplaySelect = { "Select Freeplay Map" };
-
-
-
+	const char* beforeFreeplaySelect = "Select Freeplay Map";
 };
