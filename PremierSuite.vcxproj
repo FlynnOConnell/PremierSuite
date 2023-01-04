@@ -120,6 +120,7 @@
     <ClInclude Include="IMGUI\imgui_impl_dx11.h" />
     <ClInclude Include="IMGUI\imgui_impl_win32.h" />
     <ClInclude Include="IMGUI\imgui_internal.h" />
+    <ClInclude Include="IMGUI\imgui_offset_rect.h" />
     <ClInclude Include="IMGUI\imgui_rangeslider.h" />
     <ClInclude Include="IMGUI\imgui_searchablecombo.h" />
     <ClInclude Include="IMGUI\imgui_stdlib.h" />

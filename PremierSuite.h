@@ -34,6 +34,7 @@ public:
 	std::shared_ptr<bool> customEnabled;
 	std::shared_ptr<bool> exitEnabled;
 	std::shared_ptr<bool> workshopEnabled;
+	std::shared_ptr<bool> customMapEnabled;
 
 	std::shared_ptr<bool> disablePrivate;
 	std::shared_ptr<bool> enableQueue;
@@ -51,7 +52,6 @@ public:
 	std::shared_ptr<std::string> freeplayMap;
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::shared_ptr<std::string> customMapDirPath;
-	
 	std::shared_ptr<std::vector<std::string>> freeplayMapCodes;
 
 	std::string GetMenuName() override;
@@ -65,26 +65,22 @@ public:
 	void Render();
 	void renderSettingsTab();
 	void renderKeybindsTab();
+	void renderWorkshopCombo();
+	//bool renderWorkshopMapSelection(std::map<std::filesystem::path, std::string>& customMaps, std::filesystem::path& currentCustomMap,
+	//	bool& refreshCustomMaps, const bool includeWorkshopMaps, const bool includeCustomMaps);
+
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
-	void loadFont();
-
-	ImFont* myFont;
+	bool ToggleButton(const char* str_id, bool* v);
 
 	virtual void onLoad();
-	static std::string toLower(std::string str, bool changeInline = false);
 	
 private:
 
 	bool isWindowOpen_ = false;
 	bool isMinimized = false;
-	std::string menuTitle_ = "PremierSuite " + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
+	std::string menuTitle_ = "PremierSuite:  v." + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
 	void checkConflicts();
-	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
-
-	//-----------------------------------------------------------------------------
-	//--- OnMatchEnd Logic
-	//-----------------------------------------------------------------------------
 
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
 	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue);
@@ -100,13 +96,14 @@ private:
 	void hookMatchEnded();
 	void unhookMatchEnded();
 	void logHookType(const char* const hookType) const;
+	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
+
+	std::string getInGameMap();
+	void handleKeybindCvar();
+	void logVector(std::vector<std::string> inputVec);
 
 public:
 
-	//-----------------------------------------------------------------------------
-	//--- Functions needed in GuiBase.cpp for GUI rendering
-	//-----------------------------------------------------------------------------
-	
 	void quickPluginEnabled();
 
 	void setEnablePlugin(std::shared_ptr<bool> newBool);
@@ -133,56 +130,43 @@ public:
 	bool isPrivate(ServerWrapper server);
 	bool isTournament(ServerWrapper server);
 	bool isStandard(ServerWrapper server);
-	std::string getInGameMap();
-	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
+	
+	int* getIndex(std::vector<std::string> v, std::string str);
+	[[nodiscard]] std::vector<std::string> GetFreeplayMapCodesStr() const;
+	std::string GetKeyFromValue(std::string val);
+	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
 
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath,
 		const std::vector<std::string>& extensions = { ".upk", ".udk" },
 		const std::string& preferredExtension = ".udk");
 	static std::vector<std::filesystem::path> IterateDirectory(const std::filesystem::path& directory, const std::vector<std::string>& extensions, int depth = 0, int maxDepth = 3);
 	static std::vector<std::filesystem::path> GetFilesFromDir(const std::filesystem::path& directory, int numExtension, ...);
+	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
+	static std::string toLower(std::string str, bool changeInline = false);
 
+private:
+
+	bool hooked = false;
+	bool enableCustomMaps = false;
+	bool refreshCustomMapPaths = true;
+
+	// maps and map paths
+	std::string currentMapFile;
+	std::vector<std::filesystem::path> otherMapPaths;
+	std::vector<std::filesystem::path> presetPaths;
+	std::map<std::string, std::string> maps;
+	std::map<std::filesystem::path, std::string> customMapPaths;
+	
 	struct WorkshopMap {
 		std::string Title;
 		uint64_t owner = 0;
 	};
 
 	std::vector<uint64_t> publishedFileID;
-	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
-
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
-	
-private:
 
-	void handleKeybindCvar();
-	bool hooked = false;
-	bool enableCustomMaps = false;
-	bool refreshCustomMapPaths = true;
-
-	// Maps customMapPaths key or map path
-	std::string currentMapFile;
-	std::vector<std::filesystem::path> otherMapPaths;
-	std::vector<std::filesystem::path> presetPaths;
-
-	// Maps internal name to display name
-	std::map<std::string, std::string> maps;
-
-	// Maps path to display name 
-	std::map<std::filesystem::path, std::string> customMapPaths;
-	
-	// Returns a prettified map name converted from rl's internal map string
-	// This will return the original string if it could not be converted.
-	// Really need a return value here, otherwise iterating the map will = empty string = undefined behavior
-	
-
-public:
-
-	int* getIndex(std::vector<std::string> v, std::string str);
-	void logVector(std::vector<std::string> inputVec);
-	//std::vector<const char*> strlist(std::vector<std::string>& input);
-	[[nodiscard]] std::vector<std::string> GetFreeplayMapCodesStr() const;
-	[[nodiscard]] std::string GetFreeplayMapName(const std::string& str) const;
-	std::string GetKeyFromValue(std::string val);
+	const std::vector<std::string> beforeSelect = { "Select Workshop Map" };
+	const char* beforeFreeplaySelect = "Select Freeplay Map";
 
 	const std::map<std::string, std::string> FreeplayMaps{
 		{"random",					 "random"},
@@ -222,7 +206,5 @@ public:
 		{ "wasteland_Night_S_P",     "Wasteland (Night)" },
 	};
 
-	const std::vector<std::string> beforeSelect = { "Select Workshop Map" };
-	const char* beforeFreeplaySelect = "Select Freeplay Map";
 };
 

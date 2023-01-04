@@ -256,14 +256,13 @@ void PremierSuite::renderKeybindsTab()
 			);
 			ImGui::Separator();
 			ImGui::Indent(5);
-			ImGui::Spacing();
-			ImGui::Spacing();
-			ImGui::Spacing();
+			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-			static char keybindInput[128] = "";
+			char keybindInput[128] = "";
 
 			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
 			ImGui::InputTextWithHint("", "Type out desired keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
+	
 			ImGui::PopItemWidth();
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
@@ -289,20 +288,24 @@ void PremierSuite::renderKeybindsTab()
 
 		    ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
+			if (*plugin_keybind == "") {
+				setNewPluginKeybind("Unset");
+			}
+
 			static char pluginEnabledInput[128] = "";
 			if (ImGui::Button("Plugin Toggle", KB_BTTN_SIZE))
 			{	
 				if (*plugin_keybind != "Unset") {
 					_globalCvarManager->removeBind(*plugin_keybind);
 				}
-				_globalCvarManager->setBind(keybindInput, "change_ps_enabled");
+				_globalCvarManager->setBind(pluginEnabledInput, "change_ps_enabled");
 				_globalCvarManager->executeCommand("writeconfig", true);
 			}
 			ImGui::SameLine();
 			ImGui::TextDisabled("(?)");
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Set keybind to immediately enable/disable the plugin.\n"
-					"Avoid F2 (Bakkesmod) and F6 (Bakkesmod Console."
+					"Avoid F2 (Bakkesmod) and F6 (Bakkesmod Console)."
 				);
 			ImGui::SameLine();
 			ImGui::Text("Bound key: % s\n", *plugin_keybind);
@@ -329,10 +332,12 @@ void PremierSuite::renderSettingsTab()
 		// Plugin Options
 		//-----------------------------------------------------------------------------
 
-		if (ImGui::Checkbox("Enable Plugin", &*enabled)) {
+		if (ToggleButton("", &*enabled))
+		{
 			setEnablePlugin(enabled);
 			_globalCvarManager->executeCommand("writeconfig", false);
 		}
+			
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Enable/Disable the plugin and all of its functionality.\n"
 				"You can also bind this to a key in the Keybinds tab!.\n");
@@ -398,6 +403,7 @@ void PremierSuite::renderSettingsTab()
 		//-----------------------------------------------------------------------------
 		// Auto-Exit
 		//-----------------------------------------------------------------------------
+		
 		ImGui::Text("Auto-Exit Options");
 		ImGui::SameLine();
 		ImGui::TextDisabled("(?)");
@@ -409,6 +415,8 @@ void PremierSuite::renderSettingsTab()
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
+		// Freeplay ----------------------------------------
+		//--------------------------------------------------
 		if (ImGui::Checkbox("Freeplay", &*freeplayEnabled)) {
 			setEnableFreeplay(freeplayEnabled);
 			_globalCvarManager->executeCommand("writeconfig", false);
@@ -431,8 +439,11 @@ void PremierSuite::renderSettingsTab()
 			ImGui::EndCombo();
 		}
 		ImGui::PopItemWidth();
+
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		
+		// Custom Training ----------------------------------------
+		//---------------------------------------------------------
 		if (ImGui::Checkbox("Custom Training", &*customEnabled)) {
 			setEnableCustomTraining(customEnabled);
 			_globalCvarManager->executeCommand("writeconfig", false);
@@ -459,9 +470,12 @@ void PremierSuite::renderSettingsTab()
 				"This is one I made.  :) \n\n\n"
 				"...its hard"
 		);
-
 		ImGui::PopID();
+
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+		// Main Menu ----------------------------------------
+		//---------------------------------------------------------
 
 		if (ImGui::Checkbox("Main Menu", &*exitEnabled)) {
 			setEnableExit(exitEnabled);
@@ -469,6 +483,13 @@ void PremierSuite::renderSettingsTab()
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Instant-exit to Main-Menu.\n");
+
+		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+		// Workshop Maps ----------------------------------------
+		//-------------------------------------------------------
+
+		renderWorkshopCombo();
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
@@ -648,46 +669,110 @@ void PremierSuite::renderAboutWindow(bool* p_open)
 	ImGui::End();
 }
 
-void PremierSuite::loadFont() {
+/// <summary> Renders workshop maps (BETA). </summary>
+void PremierSuite::renderWorkshopCombo()
+{
+		if (gameWrapper->IsUsingSteamVersion()) {
+			ImGui::SameLine();
+			if (ImGui::Checkbox("Enable workshop maps", &*workshopEnabled)) {
+				// currentMap.clear();
+				refreshCustomMapPaths = true;
+			}
+		}
+		ImGui::SameLine();
 
-	GuiManagerWrapper gui = gameWrapper->GetGUIManager();
-
-	auto [response, font] = gui.LoadFont("font.tff 40px", "font.ttf", 40);
-
-	if (response == 0) {
-		LOG("Failed to load the font!");
-	}
-	else if (response == 1) {
-		LOG("The font will be loaded");
-	}
-	else if (response == 2 && font) {
-		myFont = font;
-	}
-
+	/*	if (renderWorkshopMapSelection(customMapPaths, currentMapPath, refreshCustomMapPaths, enableWorkshopMaps))
+		{
+			currentMap = currentMapPath.string();
+			const std::filesystem::path config = currentMapPath.replace_extension(L".cfg");
+		}*/
 }
 
-//void ToggleButton(const char* str_id, bool* v)
-//{
-//	ImVec4* colors = ImGui::GetStyle().Colors;
-//	ImVec2 p = ImGui::GetCursorScreenPos();
-//	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+///// <summary>Renders Workshop and Custom Maps.< / summary>
+//bool PremierSuite::renderWorkshopMapSelection(std::map<std::filesystem::path, std::string>&workshopMaps, std::filesystem::path & currentCustomMap,
+// const bool includeWorkshopMaps) {
+//	if (refreshCustomMaps) {
+//		workshopMaps.clear();
+//		if (includeWorkshopMaps && gameWrapper->IsUsingSteamVersion()) {
+//			bool addedWorkshopMaps = false;
+//			workshopMaps.insert({ *workshopMapDirPath, "#Workshop Maps:" });
+//			for (const std::filesystem::path& workshopMap : getWorkshopMaps(*workshopMapDirPath)) {
+//				addedWorkshopMaps = true;
+//				if (auto it = subscribedWorkshopMaps.find(
+//					std::strtoull(workshopMap.parent_path().stem().string().c_str(), nullptr, 10));
+//					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
+//					workshopMaps.insert({ workshopMap, it->second.Title });
+//				}
+//				else {
+//					workshopMaps.insert({ workshopMap, workshopMap.stem().u8string() });
+//				}
+//			}
+//			if (!addedWorkshopMaps) {
+//				workshopMaps.erase(*workshopMapDirPath);
+//			}
+//		}
+//		if (includeCustomMaps) {
+//			bool addedCustomMaps = false;
+//			workshopMaps.insert({ *customMapDirPath, "#Custom Maps:" });
+//			for (const std::filesystem::path& customMap : GetFilesFromDir(*customMapDirPath, 2, ".upk", ".udk")) {
+//				addedCustomMaps = true;
+//				if (auto it = subscribedWorkshopMaps.find(
+//					std::strtoull(customMap.parent_path().stem().string().c_str(), nullptr, 10));
+//					it != subscribedWorkshopMaps.end() && !it->second.Title.empty()) {
+//					workshopMaps.insert({ customMap, it->second.Title });
+//				}
+//				else {
+//					workshopMaps.insert({ customMap, customMap.stem().u8string() });
+//				}
+//			}
+//			if (!addedCustomMaps) {
+//				workshopMaps.erase(*customMapDirPath);
+//			}
+//			bool addedCopiedMaps = false;
+//			workshopMaps.insert({ COPIED_MAPS_PATH, "#Copied Maps:" });
+//			for (const std::filesystem::path& customMap : GetFilesFromDir(COPIED_MAPS_PATH, 1, ".upk")) {
+//				addedCopiedMaps = true;
+//				workshopMaps.insert({ customMap, customMap.stem().u8string() });
+//			}
+//			if (!addedCopiedMaps) {
+//				workshopMaps.erase(COPIED_MAPS_PATH);
+//			}
+//		}
+//		refreshCustomMaps = false;
+//	}
 //
-//	float height = ImGui::GetFrameHeight();
-//	float width = height * 1.55f;
-//	float radius = height * 0.50f;
+//	bool valueChanged = false;
+//	if (ImGui::SearchableCombo("##Maps", currentWorkshopMap, workshopMaps, "No maps found", "type to search")) {
+//		valueChanged = true;
+//	}
 //
-//	ImGui::InvisibleButton(str_id, ImVec2(width, height));
-//	if (ImGui::IsItemClicked()) *v = !*v;
-//	ImGuiContext& gg = *GImGui;
-//	float ANIM_SPEED = 0.085f;
-//	if (gg.LastActiveId == gg.CurrentWindow->GetID(str_id))// && g.LastActiveIdTimer < ANIM_SPEED)
-//		float t_anim = ImSaturate(gg.LastActiveIdTimer / ANIM_SPEED);
-//	if (ImGui::IsItemHovered())
-//		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_ButtonActive] : ImVec4(0.78f, 0.78f, 0.78f, 1.0f)), height * 0.5f);
-//	else
-//		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_Button] : ImVec4(0.85f, 0.85f, 0.85f, 1.0f)), height * 0.50f);
-//	draw_list->AddCircleFilled(ImVec2(p.x + radius + (*v ? 1 : 0) * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
+//	return valueChanged;
 //}
+
+bool PremierSuite::ToggleButton(const char* str_id, bool* v)
+{
+	ImVec4* colors = ImGui::GetStyle().Colors;
+	ImVec2 p = ImGui::GetCursorScreenPos();
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	float height = ImGui::GetFrameHeight();
+	float width = height * 1.55f;
+	float radius = height * 0.50f;
+
+	ImGui::InvisibleButton(str_id, ImVec2(width, height));
+	if (ImGui::IsItemClicked()) *v = !*v;
+	ImGuiContext& gg = *GImGui;
+	float ANIM_SPEED = 0.085f;
+	if (gg.LastActiveId == gg.CurrentWindow->GetID(str_id))// && g.LastActiveIdTimer < ANIM_SPEED)
+		float t_anim = ImSaturate(gg.LastActiveIdTimer / ANIM_SPEED);
+	if (ImGui::IsItemHovered())
+		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_ButtonActive] : ImVec4(0.78f, 0.78f, 0.78f, 1.0f)), height * 0.5f);
+	else
+		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_Button] : ImVec4(0.85f, 0.85f, 0.85f, 1.0f)), height * 0.50f);
+	draw_list->AddCircleFilled(ImVec2(p.x + radius + (*v ? 1 : 0) * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
+	return *v;
+
+}
 
 // Usage:
 //  static ExampleAppLog my_log;

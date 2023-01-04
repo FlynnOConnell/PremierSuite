@@ -146,6 +146,9 @@
     <ClInclude Include="IMGUI\imguiComboFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IMGUI\imgui_offset_rect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PremierSuite.rc">

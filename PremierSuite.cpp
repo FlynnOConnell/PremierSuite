@@ -203,13 +203,6 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 	return keys;
 }
 
-[[nodiscard]] std::string PremierSuite::GetFreeplayMapName(const std::string& str) const {
-	const auto iter = FreeplayMaps.find(str);
-	if (iter == FreeplayMaps.end())
-		return str;
-	return iter->second;
-};
-
 int* PremierSuite::getIndex(std::vector<std::string> v, std::string str)
 {
 	auto it = std::find(v.begin(), v.end(), str);
