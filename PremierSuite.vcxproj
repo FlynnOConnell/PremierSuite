@@ -110,6 +110,7 @@
     </ClCompile>
     <ClCompile Include="PremierSuite.cpp" />
     <ClCompile Include="GuiBase.cpp" />
+    <ClCompile Include="util\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="IMGUI\imconfig.h" />

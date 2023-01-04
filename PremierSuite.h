@@ -101,7 +101,7 @@ private:
 	std::string getInGameMap();
 	void handleKeybindCvar();
 	void logVector(std::vector<std::string> inputVec);
-
+	std::string btos(bool x);
 public:
 
 	void quickPluginEnabled();
