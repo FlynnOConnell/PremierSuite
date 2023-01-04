@@ -195,22 +195,12 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 	return workshopMaps;
 }
 
-
-const char* PremierSuite::convert(const std::string& s)
-{
-	return s.c_str();
-}
-
 // call this once, onload
-[[nodiscard]] std::vector<const char*> PremierSuite::GetFreeplayMapCodes() const
+[[nodiscard]] std::vector<std::string> PremierSuite::GetFreeplayMapCodesStr() const
 {
 	auto kv = std::views::values(FreeplayMaps);
 	std::vector<std::string> keys{ kv.begin(), kv.end() };
-
-	std::vector<const char*>  vc;
-	std::transform(keys.begin(), keys.end(), std::back_inserter(vc), convert);
-	
-	return vc;
+	return keys;
 }
 
 [[nodiscard]] std::string PremierSuite::GetFreeplayMapName(const std::string& str) const {
@@ -219,6 +209,40 @@ const char* PremierSuite::convert(const std::string& s)
 		return str;
 	return iter->second;
 };
+
+int* PremierSuite::getIndex(std::vector<std::string> v, std::string str)
+{
+	auto it = std::find(v.begin(), v.end(), str);
+	int idx;
+	// If element was found
+	if (it != v.end())
+	{
+		int idx = it - v.begin();
+	}
+	else { // not found
+		LOG("Index not found");
+		int idx = -1;
+	}
+	return &idx;
+}
+
+std::string PremierSuite::GetKeyFromValue(std::string val)
+{
+	auto it = std::find_if(std::begin(FreeplayMaps), std::end(FreeplayMaps),
+		[&val](const auto& p)
+		{
+			return p.second == val;
+		}
+	);
+
+	if (it != std::end(maps))
+	{
+		return it->first;
+	}
+	else {
+		return it->first;
+	}
+}
 
 //-----------------------------------------------------------------------------
 //--- Game Status Functions
@@ -334,10 +358,9 @@ void PremierSuite::setCustomTrainingCode(std::string newCode)
 	_globalCvarManager->getCvar("custom_code").setValue(newCode);
 }
 
-void PremierSuite::setFreeplayMap(const char* newMap)
+void PremierSuite::setFreeplayMap(std::string newMap)
 {
-	if (!newMap) { return; LOG("Undefined, null newMap"); };
-	_globalCvarManager->getCvar("freeplay_map").setValue(*newMap);
+	_globalCvarManager->getCvar("freeplay_map").setValue(newMap);
 }
 
 void PremierSuite::setNewGUIKeybind(std::string newKeybind)
@@ -492,16 +515,20 @@ void PremierSuite::executeQueue()
 void PremierSuite::executeFreeplay()
 {
 	std::stringstream launchTrainingCommandBuilder;
+	
 	std::string mapname = *freeplayMap;
+	std::string mapcode = GetKeyFromValue(mapname);
 
 	if (mapname.compare("random") == 0)
 	{
-		mapname = gameWrapper->GetRandomMap();
+		mapcode = gameWrapper->GetRandomMap();
 	}
 
-	launchTrainingCommandBuilder << "start " << mapname << "?Game=TAGame.GameInfo_Tutorial_TA?GameTags=Training";
+	launchTrainingCommandBuilder << "start " << mapcode << "?Game=TAGame.GameInfo_Tutorial_TA?GameTags=Freeplay";
+	LOG("command: {}", launchTrainingCommandBuilder.str());
 	const std::string launchTrainingCommand = launchTrainingCommandBuilder.str();
 	auto game = gameWrapper->GetOnlineGame();
+
 	if (!game.IsNull())
 	{
 		if (!game.GetbMatchEnded())
@@ -618,8 +645,8 @@ void PremierSuite::onLoad()
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
 	// Initialize map codes one time and point to them
-	std::vector<const char*> codes = GetFreeplayMapCodes();
-	// freeplayMapCodes = std::make_shared<std::vector<const char*>>(codes);
+	std::vector<std::string> codes = GetFreeplayMapCodesStr();
+	freeplayMapCodes = std::make_shared<std::vector<std::string>>(codes);
 
 	registerCvars();
 	registerNotifiers();
@@ -666,16 +693,6 @@ void PremierSuite::registerNotifiers() {
 
 	cvarManager->registerNotifier("debug", [this](std::vector<std::string> args) {
 
-		//std::vector<const char*> maps = GetFreeplayMapCodes();
-		//const char* mapChars = maps[0];
-		//unsigned long long mapsize = sizeof(mapChars);
-		//for (int n = 0; n < maps.size(); n++)
-		//{
-		//	const char* thismap = maps[n];
-		//	LOG("C_str | n | maps[n]: {}, {}, {}", thismap, std::to_string(n), maps[n]);
-		//}
-
-		//logVector(maps);
 
 		}, "", PERMISSION_ALL);
 
@@ -841,8 +858,8 @@ void PremierSuite::registerCvars() {
 	);
 
 	// freeplay map
-	freeplayMap = std::make_shared<std::string>("Beckwith Park (Stormy)");
-	cvarManager->registerCvar("freeplay_map", "Beckwith Park (Stormy)", "Determines the map (code, not name) that will launch for training.").bindTo(freeplayMap);
+	freeplayMap = std::make_shared<std::string>("Beckwith Park (Midnight)");
+	cvarManager->registerCvar("freeplay_map", "Beckwith Park (Midnight)", "Determines the map (code, not name) that will launch for training.").bindTo(freeplayMap);
 	cvarManager->getCvar("freeplay_map").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 		*freeplayMap = cvar.getStringValue();
 		}
@@ -894,3 +911,5 @@ void PremierSuite::registerCvars() {
 		}
 	);
 }
+
+

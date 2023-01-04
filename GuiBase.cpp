@@ -2,10 +2,11 @@
 #include "PremierSuite.h"
 #include "logging.h"
 #include "GuiBase.h"
+#include <algorithm>
 #include "IMGUI/imgui_internal.h"
 #include "IMGUI/imgui_stdlib.h"
 #include "bakkesmod/wrappers/GuiManagerWrapper.h"
-#include "IMGUI/imguiComboFilter.h"
+#include "IMGUI/imgui_searchablecombo.h"
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
@@ -369,7 +370,7 @@ void PremierSuite::renderSettingsTab()
 			ImGui::SetTooltip("Automatically queue when an online match has ended.");
 		ImGui::SameLine(150);
 
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
 		ImGui::PushID("queueDelayTime");
 		if (ImGui::SliderFloat("", &*delayQueue, 0.0f, 10.0f, "Delay: %.1f s")) {
 			setDelayQueue(delayQueue);
@@ -414,28 +415,22 @@ void PremierSuite::renderSettingsTab()
 		}
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Instant-exit to Freeplay.\n");
-		ImGui::SameLine();
+		ImGui::SameLine(150);
 
-		//std::vector<const char*> codes = GetFreeplayMapCodes();
-
-	/*	std::vector<const char*> mapcodes = *freeplayMapCodes;
 		std::string currentMap = *freeplayMap;
 		const char* selection = currentMap.c_str();
+		std::vector<std::string> maps = *freeplayMapCodes;
+		int* index = getIndex(maps, selection);
 
-		if (ImGui::BeginCombo("Freeplay Selector", selection, 0))
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
+
+		if (ImGui::SearchableCombo("##", index, maps, selection, "type to search"))
 		{
-			for (int n = 0; n < maps.size(); n++)
-			{
-				bool is_selected = (selection == mapcodes[n]);
-				if (ImGui::Selectable((char*)mapcodes[n], is_selected))
-					selection = mapcodes[n];
-					setFreeplayMap(selection);
-				if (is_selected)
-					ImGui::SetItemDefaultFocus();  
-			}
+			setFreeplayMap(maps[*index]);
+			currentMap = maps[*index];
 			ImGui::EndCombo();
-		}*/
-
+		}
+		ImGui::PopItemWidth();
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 		
 		if (ImGui::Checkbox("Custom Training", &*customEnabled)) {
@@ -445,7 +440,7 @@ void PremierSuite::renderSettingsTab()
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Instant-exit to Custom Training.\n");
 		ImGui::SameLine(150);
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
 		ImGui::PushID(14);
 
 		std::string str0 = std::string();
@@ -491,7 +486,7 @@ void PremierSuite::renderSettingsTab()
 			ImGui::SetTooltip("Disable the all automatic-exit settings for casual matches..");
 
 		ImGui::SameLine(150);
-		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.75f);
+		ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
 		ImGui::PushID("exitDelayTime");
 		if (ImGui::SliderFloat("", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
 			setDelayExit(delayExit);

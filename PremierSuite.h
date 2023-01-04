@@ -48,11 +48,11 @@ public:
 	std::shared_ptr<std::string> plugin_keybind;
 	std::shared_ptr<std::string> customCode;
 	std::shared_ptr<std::string> workshopMap;
-	std::shared_ptr<std::string> freeplayMap; //TODO combo with maps
+	std::shared_ptr<std::string> freeplayMap;
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::shared_ptr<std::string> customMapDirPath;
 	
-	std::shared_ptr<std::vector<const char*>> freeplayMapCodes;
+	std::shared_ptr<std::vector<std::string>> freeplayMapCodes;
 
 	std::string GetMenuName() override;
 	std::string GetMenuTitle() override;
@@ -74,9 +74,6 @@ public:
 	virtual void onLoad();
 	static std::string toLower(std::string str, bool changeInline = false);
 	
-	
-
-
 private:
 
 	bool isWindowOpen_ = false;
@@ -88,6 +85,7 @@ private:
 	//-----------------------------------------------------------------------------
 	//--- OnMatchEnd Logic
 	//-----------------------------------------------------------------------------
+
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
 	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue);
 
@@ -129,7 +127,7 @@ public:
 	void setCustomTrainingCode(std::string newStr);
 	void setNewGUIKeybind(std::string newKeybind);
 	void setNewPluginKeybind(std::string newKeybind);
-	void setFreeplayMap(const char* newMap);
+	void setFreeplayMap(std::string newMap);
 
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
@@ -160,16 +158,15 @@ private:
 	bool hooked = false;
 	bool enableCustomMaps = false;
 	bool refreshCustomMapPaths = true;
-	int currentFreeplayMap = 0;
 
 	// Maps customMapPaths key or map path
-	std::string currentMap;
 	std::string currentMapFile;
 	std::vector<std::filesystem::path> otherMapPaths;
 	std::vector<std::filesystem::path> presetPaths;
 
 	// Maps internal name to display name
 	std::map<std::string, std::string> maps;
+
 	// Maps path to display name 
 	std::map<std::filesystem::path, std::string> customMapPaths;
 	
@@ -179,14 +176,16 @@ private:
 	
 
 public:
-	const char* convert(const std::string& s);
+
+	int* getIndex(std::vector<std::string> v, std::string str);
 	void logVector(std::vector<std::string> inputVec);
 	//std::vector<const char*> strlist(std::vector<std::string>& input);
-	[[nodiscard]] std::vector<const char*> GetFreeplayMapCodes() const;
+	[[nodiscard]] std::vector<std::string> GetFreeplayMapCodesStr() const;
 	[[nodiscard]] std::string GetFreeplayMapName(const std::string& str) const;
-
+	std::string GetKeyFromValue(std::string val);
 
 	const std::map<std::string, std::string> FreeplayMaps{
+		{"random",					 "random"},
 		{ "CHN_Stadium_Day_P",       "Forbidden Temple (Day)" },
 		{ "CHN_Stadium_P",           "Forbidden Temple" },
 		{ "EuroStadium_Night_P",     "Mannfield (Night)" },
@@ -226,3 +225,4 @@ public:
 	const std::vector<std::string> beforeSelect = { "Select Workshop Map" };
 	const char* beforeFreeplaySelect = "Select Freeplay Map";
 };
+
