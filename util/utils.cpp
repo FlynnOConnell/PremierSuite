@@ -234,7 +234,7 @@ void PremierSuite::checkConflicts()
 	// instantsuite functions cause weird bad stuff no good 
 	std::vector<std::string> conflicts = parseCfg("instantsuite", false);
 	if (!conflicts.empty()) {
-		cvarManager->executeCommand("unload instantsuite");
+		cvarManager->executeCommand("plugin unload instantsuite");
 	}
 }
 
