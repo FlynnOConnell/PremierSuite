@@ -173,6 +173,15 @@ void PremierSuite::setNewPluginKeybind(std::string newKeybind)
 	_globalCvarManager->getCvar("ps_toggle_keybind").setValue(newKeybind);
 }
 
+std::string PremierSuite::getClient()
+{
+	if (gameWrapper->IsUsingSteamVersion())
+		return "Steam";
+	else {
+		return "Epic Games";
+	}
+}
+
 // <summary>Return lines containing the given search string.</summary>
 // <param name="searchString">Name of the string to search</param>
 // <returns> Vector of std::string keybinds.</returns>
@@ -197,6 +206,7 @@ void PremierSuite::handleKeybindCvar() {
 		cvarManager->getCvar("ps_gui_keybind").setValue(guiKeybinds[0]);
 		*gui_keybind = guiKeybinds[0];
 	}
+
 	else {
 		bool guibound = false;
 		for (std::string bind : guiKeybinds) {
@@ -446,6 +456,8 @@ void PremierSuite::registerNotifiers() {
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("debug", [this](std::vector<std::string> args) {
+		std::vector<std::filesystem::path> workshops = getWorkshopMaps(WORKSHOP_MAPS_PATH);
+		std::map<std::string, std::string> files = get_upk_files(WORKSHOP_MAPS_PATH.string());
 
 
 		}, "", PERMISSION_ALL);

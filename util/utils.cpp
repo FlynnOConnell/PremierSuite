@@ -116,9 +116,7 @@ std::vector<std::filesystem::path> PremierSuite::GetFilesFromDir(const std::file
 /// <param name="extensions">List of map extensions to filter by</param>
 /// <param name="preferredExtension">Map extension to prefer when multiple files are found</param>
 /// <returns>The workshop maps from the given directory</returns>
-std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::filesystem::path& workshopPath,
-	const std::vector<std::string>& extensions,
-	const std::string& preferredExtension)
+std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::filesystem::path& workshopPath)
 {
 	if (!exists(workshopPath)) {
 		return std::vector<std::filesystem::path>();
@@ -126,12 +124,13 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 
 	// Make sure we don't request workshop map names every tick.
 	const bool shouldRequestWorkshopMapNames = publishedFileID.empty();
-	std::vector<std::filesystem::path> files = IterateDirectory(workshopPath, extensions, 0, 1);
+	std::vector<std::filesystem::path> files = IterateDirectory(workshopPath, {".udk"}, 0, 1);
 	std::filesystem::path bestPath;
 	std::vector<std::filesystem::path> workshopMaps;
 	for (const std::filesystem::path& file : files) {
 		if (file.parent_path() != bestPath.parent_path()) {
 			if (!bestPath.empty()) {
+				// this is the name of the folder which houses the workshop map
 				const uint64_t workshopMapId = std::strtoull(bestPath.parent_path().stem().string().c_str(), nullptr,
 					10);
 				if (shouldRequestWorkshopMapNames && subscribedWorkshopMaps.find(workshopMapId) == subscribedWorkshopMaps.end()) {
@@ -141,9 +140,6 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 			}
 			bestPath = file;
 		}
-		else if (bestPath.extension() != preferredExtension && file.extension() == preferredExtension) {
-			bestPath = file;
-		}
 	}
 
 	if (!bestPath.empty()) {
@@ -151,10 +147,9 @@ std::vector<std::filesystem::path> PremierSuite::getWorkshopMaps(const std::file
 		if (shouldRequestWorkshopMapNames && subscribedWorkshopMaps.find(workshopMapId) == subscribedWorkshopMaps.end()) {
 			publishedFileID.push_back(workshopMapId);
 		}
+		//LOG("BestPath: {}", bestPath.string());
 		workshopMaps.push_back(bestPath);
 	}
-
-
 	return workshopMaps;
 }
 
@@ -241,4 +236,21 @@ void PremierSuite::checkConflicts()
 	if (!conflicts.empty()) {
 		cvarManager->executeCommand("unload instantsuite");
 	}
+}
+
+std::map<std::string, std::string> PremierSuite::get_upk_files(const std::string& root_dir) {
+	std::map<std::string, std::string> upk_files;
+
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(root_dir)) {
+		if (entry.is_directory()) {
+			const auto dir_path = entry.path();
+			for (const auto& upk_entry : std::filesystem::directory_iterator(dir_path)) {
+				if (upk_entry.path().extension() == ".udk") {
+					upk_files[upk_entry.path().string()] = dir_path.filename().string();
+					break;
+				}
+			}
+		}
+	}
+	return upk_files;
 }

@@ -105,8 +105,6 @@ extern std::filesystem::path PremierSuiteDataFolder;
 static void ShowExampleAppConsole(bool* p_open);
 static void ShowExampleAppLog(bool* p_open);
 
-extern std::string btos(bool x);
-
 static void HelpMarker(const char* desc)
 {
 	ImGui::TextDisabled("(?)");
@@ -175,21 +173,16 @@ void PremierSuite::OnClose()
 
 void PremierSuite::Render()
 {
-
-	if (!isWindowOpen_) {
-		_globalCvarManager->executeCommand("togglemenu " + GetMenuName());
-		return;
-	}
-
 	IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context.");
-	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
+	
 	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
-		
-		ShouldBlockInput();
+		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		ImGui::End();
 		return;
 	}
 
+	
+	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 		if (ImGui::BeginMenuBar()) {
 			renderMenu();
@@ -206,6 +199,11 @@ void PremierSuite::Render()
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
 	ImGui::End();
+
+	if (!isWindowOpen_) {
+		cvarManager->executeCommand("togglemenu " + GetMenuName());
+		return;
+	}
 }
 
 /// <summary> Renders main menu. </summary>
@@ -489,8 +487,6 @@ void PremierSuite::renderSettingsTab()
 		// Workshop Maps ----------------------------------------
 		//-------------------------------------------------------
 
-		renderWorkshopCombo();
-
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 		if (!*enabled && !*freeplayEnabled && !*exitEnabled) {
@@ -672,14 +668,14 @@ void PremierSuite::renderAboutWindow(bool* p_open)
 /// <summary> Renders workshop maps (BETA). </summary>
 void PremierSuite::renderWorkshopCombo()
 {
-		if (gameWrapper->IsUsingSteamVersion()) {
-			ImGui::SameLine();
-			if (ImGui::Checkbox("Enable workshop maps", &*workshopEnabled)) {
-				// currentMap.clear();
-				refreshCustomMapPaths = true;
-			}
-		}
+	if (gameWrapper->IsUsingSteamVersion()) {
 		ImGui::SameLine();
+		if (ImGui::Checkbox("Enable workshop maps", &*workshopEnabled)) {
+			// currentMap.clear();
+			refreshCustomMapPaths = true;
+		}
+	}
+	ImGui::SameLine();
 
 	/*	if (renderWorkshopMapSelection(customMapPaths, currentMapPath, refreshCustomMapPaths, enableWorkshopMaps))
 		{

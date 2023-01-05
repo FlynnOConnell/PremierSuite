@@ -54,6 +54,9 @@ public:
 	std::shared_ptr<std::string> customMapDirPath;
 	std::shared_ptr<std::vector<std::string>> freeplayMapCodes;
 
+	std::string getClient();
+	std::string rlClient = getClient();
+	
 	std::string GetMenuName() override;
 	std::string GetMenuTitle() override;
 	void SetImGuiContext(uintptr_t ctx) override;
@@ -79,9 +82,9 @@ private:
 
 	bool isWindowOpen_ = false;
 	bool isMinimized = false;
-	std::string menuTitle_ = "PremierSuite:  v." + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
+	std::string menuTitle_ = "PremierSuite (" + rlClient + ") " + "v." + std::string(std::string_view(plugin_version).substr(0, std::string_view(plugin_version).rfind('.')));
 	void checkConflicts();
-
+	
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
 	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue);
 
@@ -101,6 +104,7 @@ private:
 	std::string getInGameMap();
 	void handleKeybindCvar();
 	void logVector(std::vector<std::string> inputVec);
+	void logVector(std::vector<std::filesystem::path> inputVec);
 	std::string btos(bool x);
 public:
 
@@ -136,9 +140,7 @@ public:
 	std::string GetKeyFromValue(std::string val);
 	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
 
-	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath,
-		const std::vector<std::string>& extensions = { ".upk", ".udk" },
-		const std::string& preferredExtension = ".udk");
+	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath);
 	static std::vector<std::filesystem::path> IterateDirectory(const std::filesystem::path& directory, const std::vector<std::string>& extensions, int depth = 0, int maxDepth = 3);
 	static std::vector<std::filesystem::path> GetFilesFromDir(const std::filesystem::path& directory, int numExtension, ...);
 	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
@@ -152,16 +154,14 @@ private:
 
 	// maps and map paths
 	std::string currentMapFile;
-	std::vector<std::filesystem::path> otherMapPaths;
-	std::vector<std::filesystem::path> presetPaths;
 	std::map<std::string, std::string> maps;
-	std::map<std::filesystem::path, std::string> customMapPaths;
 	
 	struct WorkshopMap {
 		std::string Title;
 		uint64_t owner = 0;
 	};
-
+	std::map<std::string, std::string> get_upk_files(const std::string& root_dir);
+	// vector of IDs, the name of the folders which house workshop maps 
 	std::vector<uint64_t> publishedFileID;
 	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 
