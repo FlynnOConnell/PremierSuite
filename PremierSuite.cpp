@@ -460,6 +460,7 @@ void PremierSuite::registerNotifiers() {
 		std::map<std::string, std::string> files = get_upk_files(WORKSHOP_MAPS_PATH.string());
 
 
+
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("ps_get_map", [this](std::vector<std::string> args) {
