@@ -7,6 +7,8 @@
 #include "GuiBase.h"
 #include "version.h"
 
+// Get-Content (-join($env:APPDATA, "\bakkesmod\bakkesmod\bakkesmod.log")) -wait -tail 1 | select-string -pattern "PremierSuite"
+
 constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
 
 extern std::filesystem::path BakkesModConfigFolder;
@@ -28,6 +30,7 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 class PremierSuite : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
 {
 public:
+	std::shared_ptr<bool> isOnSteam;
 	std::shared_ptr<bool> enabled;
 	std::shared_ptr<bool> autoGG;
 	std::shared_ptr<bool> freeplayEnabled;
@@ -51,8 +54,8 @@ public:
 	std::shared_ptr<std::string> workshopMap;
 	std::shared_ptr<std::string> freeplayMap;
 	std::shared_ptr<std::string> workshopMapDirPath;
-	std::shared_ptr<std::string> customMapDirPath;
-	std::shared_ptr<std::vector<std::string>> freeplayMapCodes;
+
+    std::vector<std::string> freeplayMaps;
 
 	std::string getClient();
 	std::string rlClient = getClient();
@@ -129,15 +132,21 @@ public:
 	void setNewGUIKeybind(std::string newKeybind);
 	void setNewPluginKeybind(std::string newKeybind);
 	void setFreeplayMap(std::string newMap);
+	void setWorkshopMap(std::string newMap);
 
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
 	bool isTournament(ServerWrapper server);
 	bool isStandard(ServerWrapper server);
 	
+	const char* getCurrentFreeplayMap();
+
 	int* getIndex(std::vector<std::string> v, std::string str);
-	[[nodiscard]] std::vector<std::string> GetFreeplayMapCodesStr() const;
-	std::string GetKeyFromValue(std::string val);
+	[[nodiscard]] std::vector<std::string> ValsToVec(std::map<std::string, std::string> map) const;
+	[[nodiscard]] std::vector<std::string> KeysToVec(std::map<std::string, std::string> map) const;
+
+	std::string GetKeyFromValue(std::map<std::string, std::string>, std::string val);
+
 	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
 
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath);
@@ -152,21 +161,19 @@ private:
 	bool enableCustomMaps = false;
 	bool refreshCustomMapPaths = true;
 
-	// maps and map paths
-	std::string currentMapFile;
 	std::map<std::string, std::string> maps;
-	
-	struct WorkshopMap {
-		std::string Title;
-		uint64_t owner = 0;
-	};
-	std::map<std::string, std::string> get_upk_files(const std::string& root_dir);
-	// vector of IDs, the name of the folders which house workshop maps 
-	std::vector<uint64_t> publishedFileID;
-	std::unordered_map<uint64_t, WorkshopMap> subscribedWorkshopMaps;
 
-	const std::vector<std::string> beforeSelect = { "Select Workshop Map" };
-	const char* beforeFreeplaySelect = "Select Freeplay Map";
+	[[nodiscard]] void set_udk_files(const std::filesystem::path& root_dir);
+	std::string add_udk_ext(std::string name);
+	// vector of IDs, the name of the folders which house workshop maps 
+
+	struct WorkshopMap {
+		std::string title;
+		uint64_t id = 0;
+	};
+
+	std::vector<std::string> workshopMapNames;
+	std::map<std::string, std::string> WorkshopMaps;
 
 	const std::map<std::string, std::string> FreeplayMaps{
 		{"random",					 "random"},

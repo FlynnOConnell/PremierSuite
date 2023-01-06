@@ -6,6 +6,7 @@
 #include <filesystem>
 #include "PremierSuite.h"
 #include "GuiBase.h"
+#include "util/globals.h"
 
 #define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
@@ -163,6 +164,11 @@ void PremierSuite::setFreeplayMap(std::string newMap)
 	_globalCvarManager->getCvar("freeplay_map").setValue(newMap);
 }
 
+void PremierSuite::setWorkshopMap(std::string newMap)
+{
+	_globalCvarManager->getCvar("workshop_map").setValue(newMap);
+}
+
 void PremierSuite::setNewGUIKeybind(std::string newKeybind)
 {
 	_globalCvarManager->getCvar("ps_gui_keybind").setValue(newKeybind);
@@ -171,6 +177,13 @@ void PremierSuite::setNewGUIKeybind(std::string newKeybind)
 void PremierSuite::setNewPluginKeybind(std::string newKeybind)
 {
 	_globalCvarManager->getCvar("ps_toggle_keybind").setValue(newKeybind);
+}
+
+const char* PremierSuite::getCurrentFreeplayMap()
+{
+	std::string currentMapStr = *freeplayMap;
+	const char* currentMapChar = currentMapStr.c_str();
+	return currentMapChar;
 }
 
 std::string PremierSuite::getClient()
@@ -289,7 +302,7 @@ void PremierSuite::executeFreeplay()
 	std::stringstream launchTrainingCommandBuilder;
 	
 	std::string mapname = *freeplayMap;
-	std::string mapcode = GetKeyFromValue(mapname);
+	std::string mapcode = GetKeyFromValue(FreeplayMaps ,mapname);
 
 	if (mapname.compare("random") == 0)
 	{
@@ -330,8 +343,15 @@ void PremierSuite::executeWorkshop()
 {
 	auto game = gameWrapper->GetOnlineGame();
 	std::string workshop_map = cvarManager->getCvar("workshop_map").getStringValue();
-
-	if (game.IsNull()) { cvarManager->log("null_pntr"); return; } //nullcheck
+	if (workshop_map == "") { return; }
+	auto mapiterator = WorkshopMaps.find(workshop_map);
+	workshop_map += ".udk";
+	std::string workshop_id = mapiterator->second;
+	
+	std::string command = ("load_workshop " + workshop_id +  " " + workshop_map);
+	LOG("{}", workshop_id);
+	LOG("{}", mapiterator->second);
+	if (game.IsNull()) { cvarManager->log("null_pntr"); return; }
 
 	if (!game.IsNull())
 	{
@@ -340,8 +360,7 @@ void PremierSuite::executeWorkshop()
 			return;
 		}
 	}
-
-	cvarManager->executeCommand("load_workshop " + workshop_map);
+	cvarManager->executeCommand(command);
 }
 
 void PremierSuite::executeMainMenu()
@@ -415,11 +434,13 @@ void PremierSuite::onLoad()
 	}
 
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
+	set_udk_files(WORKSHOP_MAPS_PATH);
 
-	// Initialize map codes one time and point to them
-	std::vector<std::string> codes = GetFreeplayMapCodesStr();
-	freeplayMapCodes = std::make_shared<std::vector<std::string>>(codes);
-
+	isOnSteam = std::make_shared<bool>(gameWrapper->IsUsingSteamVersion());
+	// Initialize vector of maps
+	workshopMapNames = std::vector<std::string>(KeysToVec(WorkshopMaps));
+	freeplayMaps = std::vector<std::string>(ValsToVec(FreeplayMaps));
+	
 	registerCvars();
 	registerNotifiers();
 
@@ -456,11 +477,16 @@ void PremierSuite::registerNotifiers() {
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("debug", [this](std::vector<std::string> args) {
-		std::vector<std::filesystem::path> workshops = getWorkshopMaps(WORKSHOP_MAPS_PATH);
-		std::map<std::string, std::string> files = get_upk_files(WORKSHOP_MAPS_PATH.string());
+	/*	std::string workshop_map = cvarManager->getCvar("workshop_map").getStringValue();
+		uint64_t workshop_id = workshopMapHolder[workshop_map];
+		LOG("Name: {}", workshop_map);
+		LOG("ID: {}", std::to_string(workshop_id));
+		std::string space = " ";
+		const std::string builder =  "load_workshop " + workshop_id + space + workshop_map;
+		LOG("Command: {}", builder);*/
 
 
-
+			
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("ps_get_map", [this](std::vector<std::string> args) {
@@ -644,11 +670,6 @@ void PremierSuite::registerCvars() {
 	workshopMapDirPath = std::make_shared<std::string>();
 	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
 		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
-
-	// custom maps directory path
-	customMapDirPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("ps_custom_path", CUSTOM_MAPS_PATH.string(),
-		"Default path for your custom maps directory").bindTo(customMapDirPath);
 
 	//-----------------------------------------------------------------------------
 	// Timeout Delays (FLOAT) -----------------------------------------------------

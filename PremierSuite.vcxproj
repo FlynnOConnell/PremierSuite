@@ -133,6 +133,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="GuiBase.h" />
     <ClInclude Include="PremierSuite.h" />
+    <ClInclude Include="util\globals.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
