@@ -205,10 +205,10 @@ std::string PremierSuite::GetKeyFromValue(std::map<std::string, std::string> map
 	}
 }
 
-std::vector<std::string> PremierSuite::parseCfg(const std::string searchString, bool log)
+std::vector<std::string> PremierSuite::parseCfg(std::filesystem::path filePath, const std::string searchString, bool log)
 {
 	const std::string bind = searchString;
-	std::ifstream file(BINDS_FILE_PATH);
+	std::ifstream file(filePath);
 	std::vector<std::string> lines;
 
 	if (file.is_open()) {
@@ -242,7 +242,7 @@ void PremierSuite::logVector(std::vector<std::string> inputVec)
 void PremierSuite::checkConflicts()
 {
 	// instantsuite functions cause weird bad stuff no good 
-	std::vector<std::string> conflicts = parseCfg("instantsuite", false);
+	std::vector<std::string> conflicts = parseCfg(PLUGINS_FILE_PATH, "instantsuite", false);
 	if (!conflicts.empty()) {
 		cvarManager->executeCommand("plugin unload instantsuite");
 	}

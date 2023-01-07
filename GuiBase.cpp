@@ -132,11 +132,6 @@ std::string SettingsWindowBase::GetPluginName()
 	return "PremierSuite";
 }
 
-void SettingsWindowBase::SetImGuiContext(uintptr_t ctx)
-{
-	ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
-}
-
 std::string PremierSuite::GetMenuName()
 {
 	return "PremierSuite";
@@ -175,18 +170,20 @@ void PremierSuite::OnClose()
 void PremierSuite::Render()
 {
 	IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context.");
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImFont* font = io.Fonts->AddFontFromFileTTF("lib/imgui/misc/fonts/Roboto-Medium.ttf", 16.0f);
-
 	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		ImGui::End();
 		return;
 	}
-
-	
+	if (!myRoboFont) {
+		auto gui = gameWrapper->GetGUIManager();
+		myRoboFont = gui.GetFont("font.tff 40px");
+		LOG("Default font loaded");
+	}
+	if (myRoboFont) ImGui::PushFont(myRoboFont); 
 	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
+
 		if (ImGui::BeginMenuBar()) {
 			renderMenu();
 			ImGui::EndMenuBar();
@@ -201,6 +198,8 @@ void PremierSuite::Render()
 
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
+	
+	if (myRoboFont) ImGui::PopFont();
 	ImGui::End();
 
 	if (!isWindowOpen_) {
@@ -248,9 +247,9 @@ void PremierSuite::renderMenu()
 /// <summary> Renders keybinds tab for changing GUI keybinds. </summary>
 void PremierSuite::renderKeybindsTab()
 {
-
 	if (ImGui::BeginTabItem("Keybinds")) {
 		if (ImGui::BeginChild("##Keybinds")) {
+
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			ImGui::Text(
@@ -313,7 +312,9 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
+
 	}
+
 	if (!isWindowOpen_) {
 		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		return;
@@ -425,8 +426,6 @@ void PremierSuite::renderSettingsTab()
 					"Current options: Main-Menu, Freeplay, Custom Training Pack.\n"
 					"Workshops, private game modes and specialty game modes are on the way.\n\n"
 					"*If multiple exit-options are enabled, the uppmost most selection will be executed.");
-
-
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			/// Freeplay ----------------------------------------
@@ -451,7 +450,6 @@ void PremierSuite::renderSettingsTab()
 				}
 				ImGui::PopItemWidth();
 			}
-
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			/// Custom Training ----------------------------------------
@@ -484,7 +482,6 @@ void PremierSuite::renderSettingsTab()
 					);
 				ImGui::PopID();
 			}
-
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			/// Workshop Maps ----------------------------------------
@@ -540,10 +537,7 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Instant-exit to Main-Menu.\n");
 			}
-
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
-		
 
 			/// Disable Exit for Casual
 			{
@@ -565,7 +559,6 @@ void PremierSuite::renderSettingsTab()
 				ImGui::PopItemWidth();
 				ImGui::PopID();
 			}
-
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			if (!*enabled) {
@@ -574,6 +567,7 @@ void PremierSuite::renderSettingsTab()
 				ImGui::PopID();
 			}
 		}
+	
 		ImGui::EndTabItem();
 	}
 
@@ -711,25 +705,6 @@ void PremierSuite::renderAboutWindow(bool* p_open)
 	}
 
 	ImGui::End();
-}
-
-/// <summary> Renders workshop maps (BETA). </summary>
-void PremierSuite::renderWorkshopCombo()
-{
-	if (gameWrapper->IsUsingSteamVersion()) {
-		ImGui::SameLine();
-		if (ImGui::Checkbox("Enable workshop maps", &*workshopEnabled)) {
-			// currentMap.clear();
-			refreshCustomMapPaths = true;
-		}
-	}
-	ImGui::SameLine();
-
-	/*	if (renderWorkshopMapSelection(customMapPaths, currentMapPath, refreshCustomMapPaths, enableWorkshopMaps))
-		{
-			currentMap = currentMapPath.string();
-			const std::filesystem::path config = currentMapPath.replace_extension(L".cfg");
-		}*/
 }
 
 ///// <summary>Renders Workshop and Custom Maps.< / summary>

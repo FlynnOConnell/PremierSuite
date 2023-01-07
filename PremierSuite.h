@@ -4,6 +4,8 @@
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
+#include "bakkesmod/wrappers/GuiManagerWrapper.h"
+
 #include "GuiBase.h"
 #include "version.h"
 
@@ -12,17 +14,12 @@
 constexpr auto plugin_version = stringify(VERSION_MAJOR) "." stringify(VERSION_MINOR) "." stringify(VERSION_PATCH) "." stringify(VERSION_BUILD);
 
 extern std::filesystem::path BakkesModConfigFolder;
-extern std::filesystem::path PremierSuiteDataFolder;
 extern std::filesystem::path RocketLeagueExecutableFolder;
 
 #define CONFIG_FILE_PATH		(BakkesModConfigFolder / "config.cfg")
 #define BINDS_FILE_PATH			(BakkesModConfigFolder / "binds.cfg")
 #define PLUGINS_FILE_PATH		(BakkesModConfigFolder / "plugins.cfg")
-#define FONTS_PATH			    (CORE_DATA_PATH / "fonts" )
-#define STYLES_PATH			    (CORE_DATA_PATH / "styles" )
-#define COOKED_PC_CONSOLE_PATH  (RocketLeagueExecutableFolder / "../../TAGame/CookedPCConsole")
-#define CUSTOM_MAPS_PATH        (COOKED_PC_CONSOLE_PATH / "mods")
-#define COPIED_MAPS_PATH        (COOKED_PC_CONSOLE_PATH / "PremierSuite")
+#define PREMIERSUITE_FILE_PATH	(BakkesModConfigFolder / "PremierSuite.cfg")
 #define WORKSHOP_MAPS_PATH      (RocketLeagueExecutableFolder / "../../../../workshop/content/252950") //Generally C:\Program Files (x86)\Steam\steamapps\workshop\content\252950
 
 //#define DEBUG
@@ -71,16 +68,15 @@ public:
 	void Render();
 	void renderSettingsTab();
 	void renderKeybindsTab();
-	void renderWorkshopCombo();
-	//bool renderWorkshopMapSelection(std::map<std::filesystem::path, std::string>& customMaps, std::filesystem::path& currentCustomMap,
-	//	bool& refreshCustomMaps, const bool includeWorkshopMaps, const bool includeCustomMaps);
 
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 	bool ToggleButton(const char* str_id, bool* v);
 
 	virtual void onLoad();
-	
+
+	ImFont* myRoboFont;
+
 private:
 
 	bool isWindowOpen_ = false;
@@ -147,7 +143,8 @@ public:
 
 	std::string GetKeyFromValue(std::map<std::string, std::string>, std::string val);
 
-	std::vector<std::string> parseCfg(const std::string searchString, bool log = false);
+	std::vector<std::string> parseCfg(std::filesystem::path filePath, const std::string searchString, bool log);
+
 
 	std::vector<std::filesystem::path> getWorkshopMaps(const std::filesystem::path& workshopPath);
 	static std::vector<std::filesystem::path> IterateDirectory(const std::filesystem::path& directory, const std::vector<std::string>& extensions, int depth = 0, int maxDepth = 3);
@@ -165,12 +162,6 @@ private:
 
 	[[nodiscard]] void set_udk_files(const std::filesystem::path& root_dir);
 	std::string add_udk_ext(std::string name);
-	// vector of IDs, the name of the folders which house workshop maps 
-
-	struct WorkshopMap {
-		std::string title;
-		uint64_t id = 0;
-	};
 
 	std::vector<std::string> workshopMapNames;
 	std::map<std::string, std::string> WorkshopMaps;

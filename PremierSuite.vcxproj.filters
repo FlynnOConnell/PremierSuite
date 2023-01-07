@@ -87,6 +87,9 @@
     <ClCompile Include="util\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IMGUI\fonts\binary_to_compressed_c.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imgui_rangeslider.h">
@@ -160,5 +163,8 @@
     <ResourceCompile Include="PremierSuite.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="IMGUI\fonts\Roboto-Medium.ttf" />
   </ItemGroup>
 </Project>

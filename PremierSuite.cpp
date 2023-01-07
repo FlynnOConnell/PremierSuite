@@ -13,7 +13,6 @@
 BAKKESMOD_PLUGIN(PremierSuite, "Premier Suite", plugin_version, PLUGINTYPE_FREEPLAY | PLUGINTYPE_CUSTOM_TRAINING)
 
 std::filesystem::path BakkesModConfigFolder;
-std::filesystem::path PremierSuiteDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
@@ -205,8 +204,8 @@ void PremierSuite::handleKeybindCvar() {
 	std::vector<std::string> guiKeybinds = parseCfg("togglemenu PremierSuite", true);
 	std::vector<std::string> pluginKeybinds = parseCfg("change_ps_enabled", true);
 #else 
-	std::vector<std::string> guiKeybinds = parseCfg("togglemenu PremierSuite", false);
-	std::vector<std::string> pluginKeybinds = parseCfg("change_ps_enabled", false);
+	std::vector<std::string> guiKeybinds = parseCfg(BINDS_FILE_PATH, "togglemenu PremierSuite", false);
+	std::vector<std::string> pluginKeybinds = parseCfg(BINDS_FILE_PATH, "change_ps_enabled", false);
 #endif
 	if (guiKeybinds.empty()) {
 		cvarManager->log("Setting default GUI keybind: F3");
@@ -426,9 +425,22 @@ void PremierSuite::logHookType(const char* const hookType) const
 
 void PremierSuite::onLoad()
 {
+	auto gui = gameWrapper->GetGUIManager();
+	auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
+
+	if (res == 0) {
+		cvarManager->log("Failed to load the font!");
+	}
+	else if (res == 1) {
+		cvarManager->log("The font will be loaded");
+	}
+	else if (res == 2) {
+		myRoboFont = font;
+	}
+
 	_globalCvarManager = cvarManager;
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
-	std::filesystem::path PremierSuiteDataFolder = gameWrapper->GetDataFolder() / L"premiersuite";
+	std::filesystem::path PremierSuiteDataFolder = BakkesModConfigFolder / L"premiersuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
 	}

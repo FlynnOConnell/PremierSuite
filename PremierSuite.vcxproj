@@ -91,6 +91,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="IMGUI\fonts\binary_to_compressed_c.cpp" />
     <ClCompile Include="IMGUI\imgui.cpp" />
     <ClCompile Include="IMGUI\imguiComboFilter.cpp" />
     <ClCompile Include="IMGUI\imguivariouscontrols.cpp" />
@@ -138,6 +139,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="PremierSuite.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Font Include="IMGUI\fonts\Roboto-Medium.ttf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
