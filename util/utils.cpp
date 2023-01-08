@@ -245,6 +245,7 @@ void PremierSuite::checkConflicts()
 	std::vector<std::string> conflicts = parseCfg(PLUGINS_FILE_PATH, "instantsuite", false);
 	if (!conflicts.empty()) {
 		cvarManager->executeCommand("plugin unload instantsuite");
+		cvarManager->executeCommand("writeplugins");
 	}
 }
 
@@ -271,6 +272,3 @@ void PremierSuite::checkConflicts()
 	return;
 }
 
-std::string PremierSuite::add_udk_ext(std::string name) {
-
-}

@@ -167,20 +167,39 @@ void PremierSuite::OnClose()
 	isWindowOpen_ = false;
 }
 
+void PremierSuite::SetFont()
+{
+	auto myfont = myRoboFont;
+	if (!ImGui::GetFontSize() == 15) {
+		auto gui = gameWrapper->GetGUIManager();
+		auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
+
+		if (res == 0) {
+			cvarManager->log("Failed to load the font!");
+		}
+		else if (res == 1) {
+			cvarManager->log("The font will be loaded");
+		}
+		else if (res == 2) {
+			myRoboFont = font;
+			cvarManager->log("Font loaded in context.");
+		}
+		ImGui::SetCurrentFont(font);
+	}
+}
+
 void PremierSuite::Render()
 {
-	IM_ASSERT(ImGui::GetCurrentContext() != NULL && "Missing dear imgui context.");
+	SetFont();
+	if (myRoboFont) {
+		ImGui::PushFont(myRoboFont);
+	}
 	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		ImGui::End();
 		return;
 	}
-	if (!myRoboFont) {
-		auto gui = gameWrapper->GetGUIManager();
-		myRoboFont = gui.GetFont("font.tff 40px");
-		LOG("Default font loaded");
-	}
-	if (myRoboFont) ImGui::PushFont(myRoboFont); 
+
 	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -198,10 +217,8 @@ void PremierSuite::Render()
 
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
-	
-	if (myRoboFont) ImGui::PopFont();
 	ImGui::End();
-
+	if (myRoboFont) ImGui::PopFont();
 	if (!isWindowOpen_) {
 		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		return;

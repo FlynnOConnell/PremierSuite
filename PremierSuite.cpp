@@ -7,6 +7,7 @@
 #include "PremierSuite.h"
 #include "GuiBase.h"
 #include "util/globals.h"
+#include "IMGUI/imgui_internal.h"
 
 #define NELEMS(x)  (sizeof(x) / sizeof((x)[0]))
 
@@ -77,8 +78,12 @@ std::string PremierSuite::getInGameMap()
 
 void PremierSuite::quickPluginEnabled()
 {
-	if (*enabled == false) { cvarManager->getCvar("plugin_enabled").setValue(true); }
-	else { cvarManager->getCvar("plugin_enabled").setValue(false); }
+	if (*enabled == false) {
+		cvarManager->getCvar("plugin_enabled").setValue(true);
+	}
+	else {
+		cvarManager->getCvar("plugin_enabled").setValue(false);
+	}
 }
 
 void PremierSuite::setEnablePlugin(std::shared_ptr<bool> newBool)
@@ -425,19 +430,6 @@ void PremierSuite::logHookType(const char* const hookType) const
 
 void PremierSuite::onLoad()
 {
-	auto gui = gameWrapper->GetGUIManager();
-	auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
-
-	if (res == 0) {
-		cvarManager->log("Failed to load the font!");
-	}
-	else if (res == 1) {
-		cvarManager->log("The font will be loaded");
-	}
-	else if (res == 2) {
-		myRoboFont = font;
-	}
-
 	_globalCvarManager = cvarManager;
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
 	std::filesystem::path PremierSuiteDataFolder = BakkesModConfigFolder / L"premiersuite";
@@ -456,24 +448,25 @@ void PremierSuite::onLoad()
 	registerCvars();
 	registerNotifiers();
 
-	gameWrapper->SetTimeout([this](GameWrapper* gw) { this->handleKeybindCvar(); }, 1);
+	gameWrapper->SetTimeout([this](GameWrapper* gw) { 
+		this->handleKeybindCvar();
+			auto gui = gameWrapper->GetGUIManager();
+			auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
+
+			if (res == 0) {
+				cvarManager->log("Failed to load the font!");
+			}
+			else if (res == 1) {
+				cvarManager->log("The font will be loaded");
+			}
+			else if (res == 2) {
+				myRoboFont = font;
+				cvarManager->log("Font loaded in context.");
+			}
+		}, 1);
 
 	hookMatchEnded();
 }
-
-//std::vector<char*> PremierSuite::strlist(std::vector<std::string>& input) {
-//	std::vector<char*> result;
-//
-//	// remember the nullptr terminator
-//	result.reserve(input.size() + 1);
-//
-//	std::transform(begin(input), end(input),
-//		std::back_inserter(result),
-//		[](std::string& s) { return s.data(); }
-//	);
-//	result.push_back(nullptr);
-//	return result;
-//}
 
 void PremierSuite::registerNotifiers() {
 
@@ -557,6 +550,8 @@ void PremierSuite::registerCvars() {
 	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite").bindTo(enabled);
 	cvarManager->getCvar("plugin_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 		*enabled = cvar.getBoolValue();
+		if (*enabled && !hooked) hookMatchEnded();
+		if (!enabled && hooked) unhookMatchEnded();
 		}
 	);
 

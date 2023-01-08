@@ -69,6 +69,7 @@ public:
 	void renderSettingsTab();
 	void renderKeybindsTab();
 
+	void CheckFont();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 	bool ToggleButton(const char* str_id, bool* v);
@@ -105,6 +106,7 @@ private:
 	void logVector(std::vector<std::string> inputVec);
 	void logVector(std::vector<std::filesystem::path> inputVec);
 	std::string btos(bool x);
+
 public:
 
 	void quickPluginEnabled();
@@ -152,16 +154,16 @@ public:
 	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
 	static std::string toLower(std::string str, bool changeInline = false);
 
+	void SetFont();
+
 private:
 
 	bool hooked = false;
 	bool enableCustomMaps = false;
 	bool refreshCustomMapPaths = true;
-
 	std::map<std::string, std::string> maps;
 
 	[[nodiscard]] void set_udk_files(const std::filesystem::path& root_dir);
-	std::string add_udk_ext(std::string name);
 
 	std::vector<std::string> workshopMapNames;
 	std::map<std::string, std::string> WorkshopMaps;
