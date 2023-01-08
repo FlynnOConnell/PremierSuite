@@ -167,35 +167,14 @@ void PremierSuite::OnClose()
 	isWindowOpen_ = false;
 }
 
-void PremierSuite::SetFont()
-{
-	auto myfont = myRoboFont;
-	if (!ImGui::GetFontSize() == 15) {
-		auto gui = gameWrapper->GetGUIManager();
-		auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
-
-		if (res == 0) {
-			cvarManager->log("Failed to load the font!");
-		}
-		else if (res == 1) {
-			cvarManager->log("The font will be loaded");
-		}
-		else if (res == 2) {
-			myRoboFont = font;
-			cvarManager->log("Font loaded in context.");
-		}
-		ImGui::SetCurrentFont(font);
-	}
-}
 
 void PremierSuite::Render()
 {
-	SetFont();
+
 	if (myRoboFont) {
 		ImGui::PushFont(myRoboFont);
 	}
 	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
-		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		ImGui::End();
 		return;
 	}
@@ -214,7 +193,6 @@ void PremierSuite::Render()
 		renderSettingsTab();
 		renderKeybindsTab();
 		ImGui::EndTabBar();
-
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
 	ImGui::End();
@@ -230,7 +208,7 @@ void PremierSuite::renderMenu()
 {
 	static bool show_app_console = false;
 	static bool show_app_log = false;
-
+	static bool show_about_window = false;
 	if (show_app_console)             ShowExampleAppConsole(&show_app_console);
 	if (show_app_log)                 ShowExampleAppLog(&show_app_log);
 
@@ -329,7 +307,6 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
-
 	}
 
 	if (!isWindowOpen_) {
@@ -591,16 +568,16 @@ void PremierSuite::renderSettingsTab()
 }
 
 /// <summary> Renders about window. </summary>
-void PremierSuite::renderAboutWindow(bool* p_open)
+void PremierSuite::renderAboutWindow(bool* open)
 {
-	if (!ImGui::Begin("About PremierSuite", p_open, ImGuiWindowFlags_AlwaysAutoResize))
+	if (!ImGui::Begin("About PremierSuite", open, ImGuiWindowFlags_AlwaysAutoResize))
 	{
 		ImGui::End();
 		return;
 	}
 	ImGui::Separator();
-	ImGui::Text("By Flynn OConnell with help from many BakkesMod Plugin Developers and Dear ImGui documentation.");
-	ImGui::Text("This plugin was started by @iamxenobyte: https://xenobyte.dev/ ");
+	ImGui::Text("By Flynn OConnell with help Xenobyte and many BakkesMod Plugin Developers.");
+	ImGui::Text("This plugin was started by and an extension of instantsuite @iamxenobyte: https://xenobyte.dev/ ");
 	ImGui::Text("PremierSuite is licensed under the MIT License, see LICENSE for more information.");
 	ImGui::Text("Source code for this plugin is located at: https://github.com/NeuroPyPy/PremierSuite");
 	static bool show_config_info = false;

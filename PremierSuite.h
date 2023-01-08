@@ -154,8 +154,6 @@ public:
 	static bool HasExtension(const std::string& fileExtension, const std::vector<std::string>& extensions);
 	static std::string toLower(std::string str, bool changeInline = false);
 
-	void SetFont();
-
 private:
 
 	bool hooked = false;
