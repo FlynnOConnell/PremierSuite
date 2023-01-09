@@ -259,7 +259,6 @@ void PremierSuite::renderKeybindsTab()
 
 			ImGui::PushID(52);
 			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
-			//keybindHolder.fill(io.InputQueueCharacters[0]);
 			
 			char keybindInput[128] = "";
 
@@ -282,7 +281,6 @@ void PremierSuite::renderKeybindsTab()
 				_globalCvarManager->executeCommand(bind);
 				setNewGUIKeybind(*keybindHolder);
 				_globalCvarManager->executeCommand("writeconfig", true);
-				LOG("{}", *gui_keybind);
 			}
 			ImGui::PopID();
 
@@ -317,8 +315,6 @@ void PremierSuite::renderKeybindsTab()
 				);
 			ImGui::SameLine();
 			ImGui::Text("Bound key: % s\n", *plugin_keybind);
-			//if (ImGui::IsKeyPressed(VK_NUMPAD5)) { ImGui::Text("Yes"); }
-			//ImGui::GetKeyIndex()
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
@@ -458,7 +454,6 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::SearchableCombo("##", &index, freeplayMaps, "no maps found", "type to search"))
 				{
 					setFreeplayMap(freeplayMaps[index]);
-
 					ImGui::EndCombo();
 				}
 				ImGui::PopItemWidth();
@@ -490,7 +485,7 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Training pack code here, ENTER to apply.\n"
 						"The default is A0FE-F860-967D-E628: GC Balls to Master.\n"
-						"This is one I made.  :) \n\n\n"
+						"This is one I made.  :) \n\n"
 						"...its hard"
 					);
 				ImGui::PopID();
@@ -505,30 +500,28 @@ void PremierSuite::renderSettingsTab()
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 				}
 	
-				{
-					ImGui::PushID(33);
-					if (ImGui::Checkbox("Workshop", &*workshopEnabled)) {
-						setEnableWorkshop(workshopEnabled);
-						_globalCvarManager->executeCommand("writeconfig", false);
-					}
-					if (ImGui::IsItemHovered())
-						ImGui::SetTooltip("Instantly load into a workshop map.\n");
-					ImGui::SameLine(150);
-
-					std::string currentWorkshopMap = *workshopMap;
-					const char* workshop_selection = currentWorkshopMap.c_str();
-					int workshop_index = std::distance(workshopMapNames.begin(), std::find(workshopMapNames.begin(), workshopMapNames.end(), currentWorkshopMap));
-					ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
-		
-					if (ImGui::SearchableCombo("##", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
-					{
-						setWorkshopMap(workshopMapNames[workshop_index]);
-						setEnableWorkshop(workshopEnabled);
-						ImGui::EndCombo();
-					}
-					ImGui::PopItemWidth();
-					ImGui::PopID();
+				ImGui::PushID(33);
+				if (ImGui::Checkbox("Workshop", &*workshopEnabled)) {
+					setEnableWorkshop(workshopEnabled);
+					_globalCvarManager->executeCommand("writeconfig", false);
 				}
+				if (ImGui::IsItemHovered())
+					ImGui::SetTooltip("Instantly load into a workshop map.\n");
+				ImGui::SameLine(150);
+
+				std::string currentWorkshopMap = *workshopMap;
+				const char* workshop_selection = currentWorkshopMap.c_str();
+				int workshop_index = std::distance(workshopMapNames.begin(), std::find(workshopMapNames.begin(), workshopMapNames.end(), currentWorkshopMap));
+				ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
+		
+				if (ImGui::SearchableCombo("##", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
+				{
+					setWorkshopMap(workshopMapNames[workshop_index]);
+					setEnableWorkshop(workshopEnabled);
+					ImGui::EndCombo();
+				}
+				ImGui::PopItemWidth();
+				ImGui::PopID();
 				
 				if (!*isOnSteam) {
 		
@@ -581,10 +574,8 @@ void PremierSuite::renderSettingsTab()
 				ImGui::PopID();
 			}
 		}
-	
 		ImGui::EndTabItem();
 	}
-
 }
 
 /// <summary> Renders about window. </summary>
