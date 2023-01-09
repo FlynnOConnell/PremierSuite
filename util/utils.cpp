@@ -5,7 +5,11 @@
 #include <Windows.h>
 #include <filesystem>
 #include "PremierSuite.h"
+#include "IMGUI/imgui.h"
+#include "IMGUI/imgui_internal.h"
 #include "GuiBase.h"
+#include "globals.h"
+
 
 std::string PremierSuite::btos(bool x)
 {
@@ -271,4 +275,3 @@ void PremierSuite::checkConflicts()
 	}
 	return;
 }
-

@@ -5,7 +5,7 @@
 #include "bakkesmod/plugin/pluginwindow.h"
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
 #include "bakkesmod/wrappers/GuiManagerWrapper.h"
-
+#include <array>
 #include "GuiBase.h"
 #include "version.h"
 
@@ -21,6 +21,8 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 #define PLUGINS_FILE_PATH		(BakkesModConfigFolder / "plugins.cfg")
 #define PREMIERSUITE_FILE_PATH	(BakkesModConfigFolder / "PremierSuite.cfg")
 #define WORKSHOP_MAPS_PATH      (RocketLeagueExecutableFolder / "../../../../workshop/content/252950") //Generally C:\Program Files (x86)\Steam\steamapps\workshop\content\252950
+
+#define IMGUI_DEFINE_MATH_OPERATORS
 
 //#define DEBUG
 
@@ -51,9 +53,9 @@ public:
 	std::shared_ptr<std::string> workshopMap;
 	std::shared_ptr<std::string> freeplayMap;
 	std::shared_ptr<std::string> workshopMapDirPath;
-
     std::vector<std::string> freeplayMaps;
 
+	std::shared_ptr<std::string> keybindHolder;
 	std::string getClient();
 	std::string rlClient = getClient();
 	
@@ -69,7 +71,6 @@ public:
 	void renderSettingsTab();
 	void renderKeybindsTab();
 
-	void CheckFont();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 	bool ToggleButton(const char* str_id, bool* v);

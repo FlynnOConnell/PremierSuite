@@ -156,21 +156,30 @@ void PremierSuite::setDelayExit(std::shared_ptr<float> newFloat)
 void PremierSuite::setCustomTrainingCode(char newCode)
 {
 	_globalCvarManager->getCvar("custom_code").setValue(newCode);
+	*customEnabled = true;
+	setEnableCustomTraining(customEnabled);
+
 }
 
 void PremierSuite::setCustomTrainingCode(std::string newCode)
 {
 	_globalCvarManager->getCvar("custom_code").setValue(newCode);
+	*customEnabled = true;
+	setEnableCustomTraining(customEnabled);
 }
 
 void PremierSuite::setFreeplayMap(std::string newMap)
 {
 	_globalCvarManager->getCvar("freeplay_map").setValue(newMap);
+	*freeplayEnabled = true;
+	setEnableFreeplay(freeplayEnabled);
 }
 
 void PremierSuite::setWorkshopMap(std::string newMap)
 {
 	_globalCvarManager->getCvar("workshop_map").setValue(newMap);
+	*workshopEnabled = true;
+	setEnableWorkshop(workshopEnabled);
 }
 
 void PremierSuite::setNewGUIKeybind(std::string newKeybind)
@@ -206,52 +215,60 @@ std::string PremierSuite::getClient()
 // <summary>Check correct keybinds are set from CFG onLoad()</summary>
 void PremierSuite::handleKeybindCvar() {
 #ifdef DEBUG
-	std::vector<std::string> guiKeybinds = parseCfg("togglemenu PremierSuite", true);
+	std::vector<std::string> guiKeybinds = parseCfg("ps_gui", true);
 	std::vector<std::string> pluginKeybinds = parseCfg("change_ps_enabled", true);
 #else 
-	std::vector<std::string> guiKeybinds = parseCfg(BINDS_FILE_PATH, "togglemenu PremierSuite", false);
+	std::vector<std::string> guiKeybinds = parseCfg(BINDS_FILE_PATH, "ps_gui", false);
 	std::vector<std::string> pluginKeybinds = parseCfg(BINDS_FILE_PATH, "change_ps_enabled", false);
 #endif
 	if (guiKeybinds.empty()) {
-		cvarManager->log("Setting default GUI keybind: F3");
-		cvarManager->setBind("F3", "togglemenu " + GetMenuName());
+		cvarManager->log("No bind in binds config...Setting default GUI keybind: F3");
+		std::string bind = "bind " + guiKeybinds[0] + " " + "ps_gui";
+		_globalCvarManager->executeCommand(bind);
 		*gui_keybind = "F3";
 	}
 	if ((size_t)guiKeybinds.size() == 1) {
-		cvarManager->log("Setting gui keybind from binds.cfg file " + guiKeybinds[0]);
-		cvarManager->setBind(guiKeybinds[0], "togglemenu " + GetMenuName());
+		cvarManager->log("Keybind to open gui found in config: " + guiKeybinds[0]);
+		std::string bind = "bind " + guiKeybinds[0] + " " + "ps_gui";
+		_globalCvarManager->executeCommand(bind);
 		cvarManager->getCvar("ps_gui_keybind").setValue(guiKeybinds[0]);
 		*gui_keybind = guiKeybinds[0];
 	}
 
 	else {
 		bool guibound = false;
-		for (std::string bind : guiKeybinds) {
+		for (std::string keybind : guiKeybinds) {
 			if (guibound == false) {
-				if (bind == "F3") { cvarManager->removeBind(bind); } // if multiple entries, likely dont want the default F3
+				if (keybind == "F3") { // if multiple entries, likely dont want the default F3
+					std::string unbindcommand = "unbind " + keybind + " " + "ps_gui";
+					_globalCvarManager->executeCommand(unbindcommand);
+				}
 				else {
-					cvarManager->setBind(bind, "togglemenu premiersuite");
-					cvarManager->getCvar("ps_gui_keybind").setValue(bind);
+					std::string bindcommand = "bind " + keybind + " " + "ps_gui";
+					cvarManager->getCvar("ps_gui_keybind").setValue(keybind);
+					_globalCvarManager->executeCommand(bindcommand);
 					guibound = true;
 				}
 			}
 		}
 	}
 
-	if (pluginKeybinds.empty()) { cvarManager->log("Toggle Keybind is Unset."); }
+	if (pluginKeybinds.empty()) { cvarManager->log("No plugin toggle keybind set in config."); }
 	if ((size_t)pluginKeybinds.size() == 1) {
-		cvarManager->log("Setting toggle plugin keybind from binds.cfg file " + pluginKeybinds[0]);
+		cvarManager->log("Plugin toggle keybind set from config: " + pluginKeybinds[0]);
 		cvarManager->setBind(pluginKeybinds[0], "change_ps_enabled");
 		cvarManager->getCvar("ps_toggle_keybind").setValue(pluginKeybinds[0]);
 	}
 	else {
 		bool pluginbound = false;
-		for (std::string bind : pluginKeybinds) {
+		for (std::string keybind : pluginKeybinds) {
 			if (pluginbound == false) {
-				if (bind == "Unset") { cvarManager->removeBind(bind); } //remove unset binding, shouldnt happen
+				if (keybind == "Unset") { //remove unset binding, shouldnt happen
+					_globalCvarManager->executeCommand("unbind " + keybind + " change_ps_enabled");
+				}
 				else {
-					cvarManager->setBind(bind, "change_ps_enabled");
-					cvarManager->getCvar("ps_toggle_keybind").setValue(bind);
+					_globalCvarManager->executeCommand("bind " + keybind + " change_ps_enabled");
+					cvarManager->getCvar("ps_toggle_keybind").setValue(keybind);
 					pluginbound = true;
 				}
 			}
@@ -444,7 +461,7 @@ void PremierSuite::onLoad()
 	// Initialize vector of maps
 	workshopMapNames = std::vector<std::string>(KeysToVec(WorkshopMaps));
 	freeplayMaps = std::vector<std::string>(ValsToVec(FreeplayMaps));
-	
+	keybindHolder = std::make_shared<std::string>();
 	registerCvars();
 	registerNotifiers();
 
@@ -531,9 +548,11 @@ void PremierSuite::registerNotifiers() {
 		}, "", PERMISSION_ALL);
 
 	cvarManager->registerNotifier("change_ps_enabled", [this](std::vector<std::string> args) {
-
 		quickPluginEnabled();
+		}, "", PERMISSION_ALL);
 
+	cvarManager->registerNotifier("ps_gui", [this](std::vector<std::string> args) {
+		cvarManager->executeCommand("togglemenu PremierSuite");
 		}, "", PERMISSION_ALL);
 
 

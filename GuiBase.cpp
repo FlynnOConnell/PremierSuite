@@ -4,10 +4,12 @@
 #include "PremierSuite.h"
 #include "logging.h"
 #include "GuiBase.h"
+#include "IMGUI/imgui.h"
 #include "IMGUI/imgui_internal.h"
 #include "IMGUI/imgui_stdlib.h"
 #include "IMGUI/imgui_searchablecombo.h"
 #include "util/globals.h"
+#include <windows.h>
 
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_WARNINGS)
 #define _CRT_SECURE_NO_WARNINGS
@@ -170,15 +172,12 @@ void PremierSuite::OnClose()
 
 void PremierSuite::Render()
 {
-
-	if (myRoboFont) {
-		ImGui::PushFont(myRoboFont);
-	}
+	
 	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 		ImGui::End();
 		return;
 	}
-
+	if (myRoboFont) ImGui::PushFont(myRoboFont);
 	ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -195,8 +194,9 @@ void PremierSuite::Render()
 		ImGui::EndTabBar();
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
-	ImGui::End();
 	if (myRoboFont) ImGui::PopFont();
+	ImGui::End();
+	
 	if (!isWindowOpen_) {
 		cvarManager->executeCommand("togglemenu " + GetMenuName());
 		return;
@@ -209,8 +209,10 @@ void PremierSuite::renderMenu()
 	static bool show_app_console = false;
 	static bool show_app_log = false;
 	static bool show_about_window = false;
+	static bool show_demo_window = false;
 	if (show_app_console)             ShowExampleAppConsole(&show_app_console);
 	if (show_app_log)                 ShowExampleAppLog(&show_app_log);
+	if (show_demo_window)             ImGui::ShowDemoWindow(&show_demo_window);
 
 	// Dear ImGui Apps (accessible from the "Tools" menu)
 	static bool show_app_metrics = false;
@@ -227,9 +229,9 @@ void PremierSuite::renderMenu()
 		ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics, has_debug_tools);
 		ImGui::MenuItem("Console", NULL, &show_app_console);
 		ImGui::MenuItem("Log", NULL, &show_app_log);
+		ImGui::MenuItem("Log", NULL, &show_demo_window);
 		ImGui::EndMenu();
 	}
-	//if (ImGui::MenuItem("MenuItem")) {} // You can also use MenuItem() inside a menu bar!
 	if (ImGui::BeginMenu("About")) 
 	{
 		ImGui::MenuItem("About PremierSuite", NULL, &show_app_about);
@@ -242,6 +244,7 @@ void PremierSuite::renderMenu()
 /// <summary> Renders keybinds tab for changing GUI keybinds. </summary>
 void PremierSuite::renderKeybindsTab()
 {
+	ImGuiIO& io = ImGui::GetIO();
 	if (ImGui::BeginTabItem("Keybinds")) {
 		if (ImGui::BeginChild("##Keybinds")) {
 
@@ -254,21 +257,32 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::Indent(5);
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
+			ImGui::PushID(52);
+			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
+			//keybindHolder.fill(io.InputQueueCharacters[0]);
+			
 			char keybindInput[128] = "";
 
-			ImGui::PushItemWidth(15.0f * ImGui::GetFontSize());
-			ImGui::InputTextWithHint("", "Type out desired keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase);
+			if (ImGui::InputTextWithHint("", "Type out desired keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsUppercase)) {
+				*keybindHolder = keybindInput;
+			}
+
 			ImGui::PopItemWidth();
+			ImGui::PopID();
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
 			ImGui::PushID(3);
 			if (ImGui::Button("Open GUI", KB_BTTN_SIZE))
 			{
-				_globalCvarManager->removeBind(*gui_keybind);
-				_globalCvarManager->setBind(keybindInput, "togglemenu " + GetMenuName());
-				setNewGUIKeybind(keybindInput);
+				std::string unbind = "unbind " + *gui_keybind + " " + "ps_gui";
+				std::string bind = "bind " + *keybindHolder + " " + "ps_gui";
+
+				_globalCvarManager->executeCommand(unbind);
+				_globalCvarManager->executeCommand(bind);
+				setNewGUIKeybind(*keybindHolder);
 				_globalCvarManager->executeCommand("writeconfig", true);
+				LOG("{}", *gui_keybind);
 			}
 			ImGui::PopID();
 
@@ -287,15 +301,14 @@ void PremierSuite::renderKeybindsTab()
 				setNewPluginKeybind("Unset");
 			}
 
-			static char pluginEnabledInput[128] = "";
 			if (ImGui::Button("Plugin Toggle", KB_BTTN_SIZE))
 			{	
-				if (*plugin_keybind != "Unset") {
-					_globalCvarManager->removeBind(*plugin_keybind);
-				}
-				_globalCvarManager->setBind(pluginEnabledInput, "change_ps_enabled");
+				_globalCvarManager->executeCommand("unbind " + *plugin_keybind + " change_ps_enabled");
+				_globalCvarManager->executeCommand("bind " + *keybindHolder + " change_ps_enabled");
 				_globalCvarManager->executeCommand("writeconfig", true);
+				setNewPluginKeybind(*keybindHolder);
 			}
+
 			ImGui::SameLine();
 			ImGui::TextDisabled("(?)");
 			if (ImGui::IsItemHovered())
@@ -304,6 +317,11 @@ void PremierSuite::renderKeybindsTab()
 				);
 			ImGui::SameLine();
 			ImGui::Text("Bound key: % s\n", *plugin_keybind);
+			//if (ImGui::IsKeyPressed(VK_NUMPAD5)) { ImGui::Text("Yes"); }
+			//ImGui::GetKeyIndex()
+
+			ImGui::Dummy(ImVec2(0.0f, 10.0f));
+
 			ImGui::EndChild();
 		}
 		ImGui::EndTabItem();
@@ -440,6 +458,7 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::SearchableCombo("##", &index, freeplayMaps, "no maps found", "type to search"))
 				{
 					setFreeplayMap(freeplayMaps[index]);
+
 					ImGui::EndCombo();
 				}
 				ImGui::PopItemWidth();
@@ -504,6 +523,7 @@ void PremierSuite::renderSettingsTab()
 					if (ImGui::SearchableCombo("##", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
 					{
 						setWorkshopMap(workshopMapNames[workshop_index]);
+						setEnableWorkshop(workshopEnabled);
 						ImGui::EndCombo();
 					}
 					ImGui::PopItemWidth();
