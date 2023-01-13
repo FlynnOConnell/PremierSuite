@@ -88,7 +88,7 @@ public:
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 	bool ToggleButton(const char* str_id, bool* v);
-	bool Button(const char* label, bool enabled = true, const ImVec2& size = ImVec2(0, 0));
+
 private:
 
 	void checkConflicts();

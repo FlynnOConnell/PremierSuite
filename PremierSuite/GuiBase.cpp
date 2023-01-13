@@ -536,20 +536,3 @@ bool PremierSuite::ToggleButton(const char* str_id, bool* v)
 
 }
 
-bool PremierSuite::Button(const char* label, bool enabled = true, const ImVec2& size = ImVec2(0, 0)) {
-	if (enabled) {
-		return ImGui::Button(label, size);
-	}
-	else {
-		ImU32 const disabled_fg = IM_COL32_BLACK;
-		ImU32 const disabled_bg = IM_COL32(64, 64, 64, 255);
-
-		ImGui::PushStyleColor(ImGuiCol_Text, disabled_fg);
-		ImGui::PushStyleColor(ImGuiCol_Button, disabled_bg);
-		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, disabled_bg);
-		ImGui::PushStyleColor(ImGuiCol_ButtonActive, disabled_bg);
-		ImGui::Button(label, size);
-		ImGui::PopStyleColor(4);
-
-		return false;
-	}
