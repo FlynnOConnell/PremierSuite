@@ -109,12 +109,7 @@ void PremierSuite::logVector(std::vector<std::string> inputVec)
 void PremierSuite::checkConflicts()
 {
 	cvarManager->executeCommand("plugin unload instantsuite");
-	// instantsuite functions cause weird bad stuff no good 
-	//std::vector<std::string> conflicts = parseCfg(PLUGINS_FILE_PATH, "instantsuite", false);
-	//if (!conflicts.empty()) {
-	//	cvarManager->executeCommand("plugin unload instantsuite");
-	//	cvarManager->executeCommand("writeplugins");
-	//}
+	cvarManager->executeCommand("writeplugins");
 }
 
 [[nodiscard]] void PremierSuite::set_udk_files(const std::filesystem::path& root_dir) {
@@ -138,4 +133,15 @@ void PremierSuite::checkConflicts()
 		}
 	}
 	return;
+}
+
+std::vector<std::string> PremierSuite::themesToVec()
+{
+	std::vector<std::string> filenames;
+	std::filesystem::path themeFolder = PREMIERSUITE_DATA_PATH / "themes";
+
+	for (const auto& entry : std::filesystem::recursive_directory_iterator(themeFolder)) {
+		filenames.push_back(entry.path().filename().string());
+	}
+	return filenames;
 }

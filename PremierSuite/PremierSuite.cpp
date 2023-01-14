@@ -8,6 +8,8 @@ std::filesystem::path BakkesModDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
+//extern ThemeManager theme;
+
 bool PremierSuite::isRanked(ServerWrapper server) {
 	if (server.GetPlaylist().GetbRanked() == 1) { return true; };
 	return false;
@@ -129,10 +131,15 @@ void PremierSuite::handleKeybindCvar() {
 //-----------------------------------------------------------------------------
 
 void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue) {
+
+	LOG("Game ended (callbackSetDelay called).");
 	float delay = 0;
 	float delaySetting = 0;
 	if (server.IsNull()) { return; }
-	if (queue) { float delaySetting = *delayQueue; }
+	if (queue) {
+		float delaySetting = *delayQueue;
+		LOG("Game ended (callbackSetDelay called).");
+	}
 	else { float delaySetting = *delayExit; };
 	if (*autoGG) { delay = delaySetting + *autoGGDelay; }
 	else { delay = *delayExit; }
@@ -154,6 +161,8 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 
 void PremierSuite::executeQueue()
 {
+	LOG("Game ended (ExecuteQueue called).");
+
 	auto game = gameWrapper->GetOnlineGame();
 	if (game.IsNull()) { return; }
 	if (!game.IsNull())
@@ -248,24 +257,33 @@ void PremierSuite::executeMainMenu()
 
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
-	if (server.IsNull()) { return; }
+	LOG("Game ended (OnMatchEnd called).");
+
+	if (server.IsNull()) {
+		LOG("Server is Null.");
+		return; }
 
 	if (*enableQueue) {
+		LOG("EnableQueue is true, calling callbacksetDelay.");
 		callbackSetDelay(server, params, eventName, [this]() { this->executeQueue(); }, false);
 	}
 	if (*exitEnabled) {
+		LOG("MainMenu exit is true, calling callbacksetDelay.");
 		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); }, false);
 	}
 	else {
 		if (*freeplayEnabled) {
+			LOG("Freeplay exit is true, calling callbacksetDelay.");
 			callbackSetDelay(server, params, eventName, [this]() { this->executeFreeplay(); }, false);
 		}
 		else
 			if (*customEnabled) {
+				LOG("CustomTraining exit is true, calling callbacksetDelay.");
 				callbackSetDelay(server, params, eventName, [this]() { this->executeCustomTraining(); }, false);
 			}
 			else
 				if (*workshopEnabled) {
+					LOG("Workshop exit is true, calling callbacksetDelay.");
 					callbackSetDelay(server, params, eventName, [this]() { this->executeWorkshop(); }, false);
 				}
 	}
@@ -297,13 +315,17 @@ void PremierSuite::onLoad()
 	_globalCvarManager = cvarManager;
 
 	BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
-	std::filesystem::path PremierSuiteDataFolder = BakkesModConfigFolder / L"premiersuite";
+	BakkesModDataFolder = gameWrapper->GetBakkesModPath() / L"data";
+
+	std::filesystem::path PremierSuiteDataFolder = BakkesModDataFolder / L"PremierSuite";
 	if (!exists(PremierSuiteDataFolder)) {
 		std::filesystem::create_directory(PremierSuiteDataFolder);
 	}
 
 	isOnSteam = std::make_shared<bool>(gameWrapper->IsUsingSteamVersion());
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
+
+	ThemeManager theme{};
 
 	if (isOnSteam)
 	{
@@ -324,19 +346,7 @@ void PremierSuite::onLoad()
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		this->handleKeybindCvar();
 		this->checkConflicts();
-	//auto gui = gameWrapper->GetGUIManager();
-	//auto [res, font] = gui.LoadFont("RobotoMedium", "RobotoMedium.ttf", 15);
 
-	//if (res == 0) {
-	//	cvarManager->log("Failed to load the font!");
-	//}
-	//else if (res == 1) {
-	//	cvarManager->log("The font will be loaded");
-	//}
-	//else if (res == 2) {
-	//	myRoboFont = font;
-	//	cvarManager->log("Font loaded in context.");
-	//}
 		}, 1);
 
 	hookMatchEnded();
@@ -421,6 +431,8 @@ void PremierSuite::registerCvars() {
 	// Enable / Disable Feature (BOOL) --------------------------------------------
 	//-----------------------------------------------------------------------------
 
+	showEditor = std::make_shared<bool>(false);
+
 	// whole plugin
 	enabled = std::make_shared<bool>(true);
 	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite").bindTo(enabled);
@@ -428,6 +440,7 @@ void PremierSuite::registerCvars() {
 		*enabled = cvar.getBoolValue();
 	if (*enabled && !hooked) hookMatchEnded();
 	if (!enabled && hooked) unhookMatchEnded();
+
 		}
 	);
 
@@ -505,6 +518,14 @@ void PremierSuite::registerCvars() {
 		}
 	);
 
+	// theme
+	themeEnabled = std::make_shared<bool>(false);
+	cvarManager->registerCvar("themes_enabled", "0", "Enable GUI Themes").bindTo(themeEnabled);
+	cvarManager->getCvar("themes_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+		*themeEnabled = cvar.getBoolValue();
+		}
+	);
+
 	//-----------------------------------------------------------------------------
 	// Keybinds | Codes | Maps (STRING) -------------------------------------------
 	//-----------------------------------------------------------------------------
@@ -553,6 +574,17 @@ void PremierSuite::registerCvars() {
 	workshopMapDirPath = std::make_shared<std::string>();
 	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
 		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
+
+	// THEME directory path
+	themeIniPath = std::make_shared<std::string>();
+	cvarManager->registerCvar("ps_theme_path", PREMIERSUITE_DATA_PATH.string(),
+		"Default path for your themes directory").bindTo(themeIniPath);
+
+	// Current theme
+	currentTheme = std::make_shared<std::string>("default.ini");
+	cvarManager->registerCvar("ps_current_theme", "default.ini",
+		"Default path for your themes directory").bindTo(currentTheme);
+
 
 	//-----------------------------------------------------------------------------
 	// Timeout Delays (FLOAT) -----------------------------------------------------

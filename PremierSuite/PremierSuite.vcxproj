@@ -91,6 +91,14 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Fonts\FontAwesome5.cpp" />
+    <ClCompile Include="Fonts\FontAwesome5Brands.cpp" />
+    <ClCompile Include="Fonts\RobotoBold.cpp" />
+    <ClCompile Include="Fonts\RobotoItalic.cpp" />
+    <ClCompile Include="Fonts\RobotoMonoBold.cpp" />
+    <ClCompile Include="Fonts\RobotoMonoItalic.cpp" />
+    <ClCompile Include="Fonts\RobotoMonoRegular.cpp" />
+    <ClCompile Include="Fonts\RobotoRegular.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imguivariouscontrols.cpp" />
     <ClCompile Include="imgui\imgui_additions.cpp" />
@@ -104,6 +112,7 @@
     <ClCompile Include="IMGUI\imgui_stdlib.cpp" />
     <ClCompile Include="imgui\imgui_timeline.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="imgui_custom.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -112,8 +121,13 @@
     <ClCompile Include="GuiBase.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Setters.cpp" />
+    <ClCompile Include="ThemeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Color.hpp" />
+    <ClInclude Include="Fonts.hpp" />
+    <ClInclude Include="Icons\IconsFontAwesome5.hpp" />
+    <ClInclude Include="Icons\IconsFontAwesome5Brands.hpp" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imguivariouscontrols.h" />
@@ -129,10 +143,12 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="imgui_custom.hpp" />
     <ClInclude Include="logging.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PremierSuite.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ThemeManager.hpp" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

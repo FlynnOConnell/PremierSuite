@@ -9,6 +9,7 @@
 #include <functional>
 #include <memory>
 #include <algorithm>
+#include <sys/stat.h>
 
 #include <ranges>
 #include <array>

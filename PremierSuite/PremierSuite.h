@@ -1,5 +1,7 @@
 #pragma once
 
+#include "ThemeManager.hpp"
+
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
 #include "bakkesmod/plugin/PluginSettingsWindow.h"
@@ -20,17 +22,26 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 
+inline bool fileExists(const std::string& name) {
+	struct stat buffer;
+	return (stat(name.c_str(), &buffer) == 0);
+}
+//extern ThemeManager;
+//ThemeManager theme{};
+
 class PremierSuite final:
 	public BakkesMod::Plugin::BakkesModPlugin,
 	public BakkesMod::Plugin::PluginWindow,
 	public BakkesMod::Plugin::PluginSettingsWindow
 {
-	
-
 public:
+
+	ThemeManager theme{};
 
 	std::shared_ptr<bool> isOnSteam;
 	std::shared_ptr<bool> enabled;
+	std::shared_ptr<bool> themeEnabled;
+
 	std::shared_ptr<bool> autoGG;
 	std::shared_ptr<bool> freeplayEnabled;
 	std::shared_ptr<bool> customEnabled;
@@ -47,11 +58,16 @@ public:
 	std::shared_ptr<float> delayQueue;
 	std::shared_ptr<float> delayExit;
 
+	std::shared_ptr<bool> showEditor;
+
 	std::shared_ptr<std::string> gui_keybind;
 	std::shared_ptr<std::string> plugin_keybind;
 	std::shared_ptr<std::string> customCode;
 	std::shared_ptr<std::string> workshopMap;
 	std::shared_ptr<std::string> freeplayMap;
+	std::shared_ptr<std::string> currentTheme;
+	std::shared_ptr<std::string> themeIniPath;
+
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::vector<std::string> freeplayMaps;
 
@@ -68,7 +84,6 @@ public:
 	void OnOpen() override;
 	void OnClose() override;
 	void Render() override;
-
 	void onLoad();
 
 	std::string GetPluginName() override;
@@ -78,18 +93,19 @@ public:
 	bool isWindowOpen_ = false;
 	bool isMinimized = false;
 
-	bool isSettings = false;
-	bool isGui = false;
 	float long_width = 190;
 
 	/// Custom render functions for GUI window
 	void renderSettingsTab();
 	void renderKeybindsTab();
+	void renderThemesTab();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
-	bool ToggleButton(const char* str_id, bool* v);
+
+	std::vector<std::string> themesToVec();
 
 private:
+
 
 	void checkConflicts();
 
@@ -125,6 +141,8 @@ public:
 	void setEnableFreeplay(std::shared_ptr<bool> newBool);
 	void setEnableExit(std::shared_ptr<bool> newBool);
 	void setEnableQueue(std::shared_ptr<bool> newBool);
+	void setEnableThemes(std::shared_ptr<bool> newBool);
+
 
 	void setDisableQueueCasual(std::shared_ptr<bool> newBool);
 	void setDisableExitCasual(std::shared_ptr<bool> newBool);
@@ -139,6 +157,7 @@ public:
 	void setNewPluginKeybind(std::string newKeybind);
 	void setFreeplayMap(std::string newMap);
 	void setWorkshopMap(std::string newMap);
+	void setTheme(std::string newTheme);
 
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
@@ -204,6 +223,5 @@ private:
 		{ "throwbackstadium_P",      "Throwback Stadium" },
 		{ "wasteland_Night_S_P",     "Wasteland (Night)" },
 	};
-
 
 };

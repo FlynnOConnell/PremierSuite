@@ -6,6 +6,11 @@ void PremierSuite::setEnablePlugin(std::shared_ptr<bool> newBool)
 	cvarManager->getCvar("plugin_enabled").setValue(*newBool);
 }
 
+void PremierSuite::setEnableThemes(std::shared_ptr<bool> newBool)
+{
+	cvarManager->getCvar("themes_enabled").setValue(*newBool);
+}
+
 void PremierSuite::setEnableFreeplay(std::shared_ptr<bool> newBool)
 {
 	cvarManager->getCvar("freeplay_enabled").setValue(*newBool);
@@ -61,6 +66,7 @@ void PremierSuite::setDisablePrivate(std::shared_ptr<bool> newBool)
 void PremierSuite::setDelayQueue(std::shared_ptr<float>  newFloat)
 {
 	cvarManager->getCvar("queue_delay").setValue(*newFloat);
+	LOG("Queue delay: {}.", std::to_string(*newFloat));
 }
 
 void PremierSuite::setDelayExit(std::shared_ptr<float> newFloat)
@@ -90,6 +96,12 @@ void PremierSuite::setFreeplayMap(std::string newMap)
 	setEnableFreeplay(freeplayEnabled);
 }
 
+void PremierSuite::setTheme(std::string newTheme)
+{
+	cvarManager->getCvar("ps_current_theme").setValue(newTheme);
+}
+
+
 void PremierSuite::setWorkshopMap(std::string newMap)
 {
 	cvarManager->getCvar("workshop_map").setValue(newMap);
@@ -106,3 +118,4 @@ void PremierSuite::setNewPluginKeybind(std::string newKeybind)
 {
 	cvarManager->getCvar("ps_toggle_keybind").setValue(newKeybind);
 }
+

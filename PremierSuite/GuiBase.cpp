@@ -1,5 +1,9 @@
 ﻿#include "pch.h"
 #include "PremierSuite.h"
+#include "Fonts.hpp"
+#include "Icons/IconsFontAwesome5.hpp"
+#include "Icons/IconsFontAwesome5Brands.hpp"
+#include "imgui_custom.hpp"
 
 static void HelpMarker(const char* desc)
 {
@@ -65,6 +69,7 @@ void PremierSuite::RenderSettings()
 	ImGui::Spacing();
 	renderSettingsTab();
 	renderKeybindsTab();
+	renderThemesTab();
 	ImGui::EndTabBar();
 
 	//if (myRoboFont) ImGui::PopFont();
@@ -72,18 +77,11 @@ void PremierSuite::RenderSettings()
 
 void PremierSuite::Render()
 {
-	//ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver, ImVec2(0.5, 0.5));
-	//ImGui::SetNextWindowSize(ImVec2(580, 555), ImGuiCond_FirstUseEver);
-
-	if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
-		ImGui::End();
-		return;
-	}
-	//isSettings = false;
-	//isGui = true;
-	//SetWidgetSizes();
-
-	//if (myRoboFont) ImGui::PushFont(myRoboFont);
+	//if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
+	//	ImGui::End();
+	//}
+		//ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver, ImVec2(0.5, 0.5));
+	ImGui::SetNextWindowSize(ImVec2(450, 555));
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 
 		if (ImGui::BeginMenuBar()) {
@@ -91,11 +89,12 @@ void PremierSuite::Render()
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip);
+		ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip | ImGuiTabBarFlags_FittingPolicyResizeDown);
 		ImGui::Indent(5);
 		ImGui::Spacing();
 		renderSettingsTab();
 		renderKeybindsTab();
+		//renderThemesTab();
 		ImGui::EndTabBar();
 		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
 	}
@@ -147,9 +146,8 @@ void PremierSuite::renderMenu()
 /// <summary> Renders keybinds tab for changing GUI keybinds. </summary>
 void PremierSuite::renderKeybindsTab()
 {
-	//ImGuiIO& io = ImGui::GetIO();
 	if (ImGui::BeginTabItem("Keybinds")) {
-		if (ImGui::BeginChild("##Keybinds")) {
+
 
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
@@ -184,7 +182,7 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::PushID("GuiButton");
 
 			ImGui::Text("Open GUI");
-			ImGui::SameLine(100);
+			ImGui::SameLine();
 
 			if (ImGui::Button("set"))
 			{
@@ -204,6 +202,7 @@ void PremierSuite::renderKeybindsTab()
 				ImGui::SetTooltip("Set keybind to open/close the GUI.\n"
 					"Avoid F2 (Bakkesmod) and F6 (Bakkesmod Console."
 				);
+
 			ImGui::SameLine();
 			ImGui::Text("Bound key: % s\n", *gui_keybind);
 
@@ -235,9 +234,7 @@ void PremierSuite::renderKeybindsTab()
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
-			ImGui::EndChild();
-		}
-		ImGui::EndTabItem();
+			ImGui::EndTabItem();
 	}
 }
 
@@ -261,10 +258,11 @@ void PremierSuite::renderSettingsTab()
 		//-----------------------------------------------------------------------------
 		{
 			ImGui::Text("Plugin Options");
+			ImGui::SameLine();
 
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 			ImGui::PushID("Toggler");
-			if (ToggleButton("", &*enabled))
+			if (ImGui::ToggleButton("", &*enabled))
 			{
 				setEnablePlugin(enabled);
 				_globalCvarManager->executeCommand("writeconfig", false);
@@ -363,14 +361,16 @@ void PremierSuite::renderSettingsTab()
 				std::string currMap = *freeplayMap;
 				const char* currMapChr = currMap.c_str();
 				int index = std::distance(freeplayMaps.begin(), std::find(freeplayMaps.begin(), freeplayMaps.end(), currMap));
-				ImGui::PushItemWidth(long_width);
-				//ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x * 0.9f);
+
+				ImGui::PushID("FreeplayCombo");
+				ImGui::SetNextItemWidth(long_width);
 				if (ImGui::SearchableCombo("##", &index, freeplayMaps, "no maps found", "type to search"))
 				{
 					setFreeplayMap(freeplayMaps[index]);
 					ImGui::EndCombo();
 				}
-				ImGui::PopItemWidth();
+
+				ImGui::PopID();
 			}
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
@@ -383,12 +383,14 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Instant-exit to Custom Training.\n");
 				ImGui::SameLine(150);
-				ImGui::PushItemWidth(long_width);
-				ImGui::PushID("InputCodeCustom");
 
 				std::string str0 = std::string();
 				std::string c = *customCode;
 				ImGuiInputTextFlags ctflags = ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue;
+
+				ImGui::PushID("InputCodeCustom");
+				ImGui::PushItemWidth(long_width);
+
 				bool ctInput = ImGui::InputTextWithHint("", c.c_str(), &str0, ctflags);
 				if (ctInput) {
 					setCustomTrainingCode(str0);
@@ -402,6 +404,7 @@ void PremierSuite::renderSettingsTab()
 						"This is one I made.  :) \n\n"
 						"...its hard"
 					);
+				ImGui::PopItemWidth();
 				ImGui::PopID();
 			}
 
@@ -415,7 +418,7 @@ void PremierSuite::renderSettingsTab()
 					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 				}
 
-				ImGui::PushID("WorshopCheckbox");
+				ImGui::PushID("WorkshopCheckbox");
 				if (ImGui::Checkbox("Workshop", &*workshopEnabled)) {
 					setEnableWorkshop(workshopEnabled);
 					_globalCvarManager->executeCommand("writeconfig", false);
@@ -424,10 +427,13 @@ void PremierSuite::renderSettingsTab()
 					ImGui::SetTooltip("Instantly load into a workshop map.\n");
 				ImGui::SameLine(150);
 
+				ImGui::PopID();
 				std::string currentWorkshopMap = *workshopMap;
 				const char* workshop_selection = currentWorkshopMap.c_str();
 				int workshop_index = std::distance(workshopMapNames.begin(), std::find(workshopMapNames.begin(), workshopMapNames.end(), currentWorkshopMap));
-				ImGui::PushItemWidth(long_width);
+				
+				ImGui::PushID("WorkshopCombo");
+				ImGui::SetNextItemWidth(long_width);
 
 				if (ImGui::SearchableCombo("##", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
 				{
@@ -439,8 +445,6 @@ void PremierSuite::renderSettingsTab()
 				ImGui::PopID();
 
 				if (!*isOnSteam) {
-
-					ImGui::SameLine(150);
 					ImGui::PopItemFlag();
 					ImGui::PopStyleVar();
 					if (ImGui::IsItemHovered())
@@ -473,8 +477,11 @@ void PremierSuite::renderSettingsTab()
 					ImGui::SetTooltip("Disable the all automatic-exit settings for casual matches..");
 
 				ImGui::SameLine(150);
-				ImGui::PushItemWidth(long_width);
+
+
 				ImGui::PushID("exitDelayTime");
+				ImGui::PushItemWidth(long_width);
+				
 				if (ImGui::SliderFloat("", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
 					setDelayExit(delayExit);
 				}
@@ -495,6 +502,82 @@ void PremierSuite::renderSettingsTab()
 	}
 }
 
+/// <summary> Renders main GUI settings. </summary>
+void PremierSuite::renderThemesTab()
+{
+	if (ImGui::BeginTabItem("Themes")) {
+		
+		ImGui::Spacing();
+		ImGui::Text(
+			"Theme Selector:\n"
+			"Change, edit, experiment with GUI themes.\n"
+		);
+
+		ImGui::Dummy(ImVec2(0.0f, 10.0f));
+		ImGui::Separator();
+		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+		ImGui::Text("Enable Themes");
+		ImGui::SameLine();
+		ImGui::ToggleButton("Enable Theme", &*themeEnabled);
+		
+		if (!*themeEnabled) {
+			ImGui::PushID("ThemeDisabled");
+			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+		}
+
+		std::string currTheme = *currentTheme;
+		const char* currThemeChr = currTheme.c_str();
+
+		const std::vector<std::string> themes = themesToVec();
+		int idx = std::distance(themes.begin(), std::find(themes.begin(), themes.end(), currThemeChr));
+
+		ImGui::TextDisabled("(?)");
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Enable custom themes.\n"
+				"Use capital first letter, lowercase next letters, PascalCase for compound words. \n\n"
+				"Note that this will change all gui themes, not just for this plugin. \n\n"
+			);
+
+		ImGui::SameLine(150);
+
+		ImGui::SetNextItemWidth(long_width / 2);
+		if (ImGui::SearchableCombo("##", &idx, themes, "no themes found", "type to search"))
+		{
+			//theme.LoadFromDisk(themes[idx]);
+			setTheme(themes[idx]);
+			ImGui::EndCombo();
+		}
+		ImGui::PopItemWidth();
+
+		ImGui::Dummy(ImVec2(0.0f, 20.0f));
+
+		ImGui::PushID("ThemeEditor");
+
+		ImGui::Text("Edit Theme");
+		ImGui::SameLine();
+
+		if (ImGui::Button("Editor"))
+		{
+			ImGui::Begin("Theme Editor", &*showEditor);
+			ImGui::ShowStyleEditor();
+			ImGui::End();
+		}
+		ImGui::PopID();
+
+		if (!*themeEnabled) {
+
+			ImGui::PopItemFlag();
+			ImGui::PopStyleVar();
+			ImGui::PopID();
+		}
+		
+
+		ImGui::EndTabItem();
+	}
+}
+
 /// <summary> Renders about window. </summary>
 void PremierSuite::renderAboutWindow(bool* open)
 {
@@ -511,28 +594,4 @@ void PremierSuite::renderAboutWindow(bool* open)
 	ImGui::End();
 }
 
-bool PremierSuite::ToggleButton(const char* str_id, bool* v)
-{
-	ImVec4* colors = ImGui::GetStyle().Colors;
-	ImVec2 p = ImGui::GetCursorScreenPos();
-	ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-	float height = ImGui::GetFrameHeight();
-	float width = height * 1.55f;
-	float radius = height * 0.50f;
-
-	ImGui::InvisibleButton(str_id, ImVec2(width, height));
-	if (ImGui::IsItemClicked()) *v = !*v;
-	ImGuiContext& gg = *GImGui;
-	float ANIM_SPEED = 0.085f;
-	if (gg.LastActiveId == gg.CurrentWindow->GetID(str_id))// && g.LastActiveIdTimer < ANIM_SPEED)
-		float t_anim = ImSaturate(gg.LastActiveIdTimer / ANIM_SPEED);
-	if (ImGui::IsItemHovered())
-		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_ButtonActive] : ImVec4(0.78f, 0.78f, 0.78f, 1.0f)), height * 0.5f);
-	else
-		draw_list->AddRectFilled(p, ImVec2(p.x + width, p.y + height), ImGui::GetColorU32(*v ? colors[ImGuiCol_Button] : ImVec4(0.85f, 0.85f, 0.85f, 1.0f)), height * 0.50f);
-	draw_list->AddCircleFilled(ImVec2(p.x + radius + (*v ? 1 : 0) * (width - radius * 2.0f), p.y + radius), radius - 1.5f, IM_COL32(255, 255, 255, 255));
-	return *v;
-
-}
 
