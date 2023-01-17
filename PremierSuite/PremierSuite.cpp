@@ -325,7 +325,7 @@ void PremierSuite::onLoad()
 	isOnSteam = std::make_shared<bool>(gameWrapper->IsUsingSteamVersion());
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
-	ThemeManager theme{};
+	//ThemeManager theme{};
 
 	if (isOnSteam)
 	{
@@ -339,8 +339,8 @@ void PremierSuite::onLoad()
 	freeplayMaps = std::vector<std::string>(ValsToVec(FreeplayMaps));
 	keybindHolder = std::make_shared<std::string>();
 
-	//CreateKeyboardMap();
 	registerCvars();
+	LOG("Cvars registered");
 	registerNotifiers();
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
@@ -373,8 +373,13 @@ void PremierSuite::registerNotifiers() {
 			std::string space = " ";
 			const std::string builder =  "load_workshop " + workshop_id + space + workshop_map;
 			LOG("Command: {}", builder);*/
+		std::string currMap = *freeplayMap;
+		const char* currMapChr = currMap.c_str();
+		int index = std::distance(freeplayMaps.begin(), std::find(freeplayMaps.begin(), freeplayMaps.end(), currMap));
 
-
+		LOG("{}", currMap);
+		LOG("{}", std::to_string(index));
+		LOG("{}", freeplayMaps[index]);
 
 		}, "", PERMISSION_ALL);
 
@@ -431,15 +436,15 @@ void PremierSuite::registerCvars() {
 	// Enable / Disable Feature (BOOL) --------------------------------------------
 	//-----------------------------------------------------------------------------
 
-	showEditor = std::make_shared<bool>(false);
+	//showEditor = std::make_shared<bool>(false);
 
 	// whole plugin
 	enabled = std::make_shared<bool>(true);
 	cvarManager->registerCvar("plugin_enabled", "1", "Enable PremierSuite").bindTo(enabled);
 	cvarManager->getCvar("plugin_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
 		*enabled = cvar.getBoolValue();
-	if (*enabled && !hooked) hookMatchEnded();
-	if (!enabled && hooked) unhookMatchEnded();
+		if (*enabled && !hooked) hookMatchEnded();
+		if (!enabled && hooked) unhookMatchEnded();
 
 		}
 	);
@@ -519,12 +524,12 @@ void PremierSuite::registerCvars() {
 	);
 
 	// theme
-	themeEnabled = std::make_shared<bool>(false);
-	cvarManager->registerCvar("themes_enabled", "0", "Enable GUI Themes").bindTo(themeEnabled);
-	cvarManager->getCvar("themes_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-		*themeEnabled = cvar.getBoolValue();
-		}
-	);
+	//themeEnabled = std::make_shared<bool>(false);
+	//cvarManager->registerCvar("themes_enabled", "0", "Enable GUI Themes").bindTo(themeEnabled);
+	//cvarManager->getCvar("themes_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
+	//	*themeEnabled = cvar.getBoolValue();
+	//	}
+	//);
 
 	//-----------------------------------------------------------------------------
 	// Keybinds | Codes | Maps (STRING) -------------------------------------------
@@ -575,15 +580,15 @@ void PremierSuite::registerCvars() {
 	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
 		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
 
-	// THEME directory path
-	themeIniPath = std::make_shared<std::string>();
-	cvarManager->registerCvar("ps_theme_path", PREMIERSUITE_DATA_PATH.string(),
-		"Default path for your themes directory").bindTo(themeIniPath);
+	//// THEME directory path
+	//themeIniPath = std::make_shared<std::string>();
+	//cvarManager->registerCvar("ps_theme_path", PREMIERSUITE_DATA_PATH.string(),
+	//	"Default path for your themes directory").bindTo(themeIniPath);
 
-	// Current theme
-	currentTheme = std::make_shared<std::string>("default.ini");
-	cvarManager->registerCvar("ps_current_theme", "default.ini",
-		"Default path for your themes directory").bindTo(currentTheme);
+	//// Current theme
+	//currentTheme = std::make_shared<std::string>("default.ini");
+	//cvarManager->registerCvar("ps_current_theme", "default.ini",
+	//	"Default path for your themes directory").bindTo(currentTheme);
 
 
 	//-----------------------------------------------------------------------------
@@ -613,4 +618,31 @@ void PremierSuite::registerCvars() {
 		*autoGGDelay = cvar.getFloatValue();
 		}
 	);
+}
+
+void PremierSuite::bindBMCvars() {
+
+	//-----------------------------------------------------------------------------
+	// Bakkesmod Cvars ------------------------------------------------------------
+	//-----------------------------------------------------------------------------
+
+	gameSpeed = std::make_shared<float>(1);
+	_globalCvarManager->getCvar("sv_soccar_gamespeed").bindTo(gameSpeed);
+
+	workshopRandom = std::make_shared<bool>(false);
+	_globalCvarManager->getCvar("workshop_playlist_random").bindTo(workshopRandom);
+
+	trainingVariance = std::make_shared<bool>(false);
+	_globalCvarManager->getCvar("sv_training_enabled").bindTo(trainingVariance);
+
+	lowVariance = std::make_shared<bool>(false);
+	_globalCvarManager->getCvar("sv_training_enabled").bindTo(lowVariance);
+
+	medVariance = std::make_shared<bool>(false);
+	_globalCvarManager->getCvar("sv_training_enabled").bindTo(medVariance);
+
+	highVariance = std::make_shared<bool>(false);
+	_globalCvarManager->getCvar("sv_training_enabled").bindTo(highVariance);
+
+
 }

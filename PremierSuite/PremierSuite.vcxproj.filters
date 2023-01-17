@@ -90,9 +90,6 @@
     <ClCompile Include="Setters.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ThemeManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Fonts\FontAwesome5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -180,9 +177,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ThemeManager.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Color.hpp">

@@ -135,13 +135,13 @@ void PremierSuite::checkConflicts()
 	return;
 }
 
-std::vector<std::string> PremierSuite::themesToVec()
-{
-	std::vector<std::string> filenames;
-	std::filesystem::path themeFolder = PREMIERSUITE_DATA_PATH / "themes";
-
-	for (const auto& entry : std::filesystem::recursive_directory_iterator(themeFolder)) {
-		filenames.push_back(entry.path().filename().string());
-	}
-	return filenames;
-}
+//std::vector<std::string> PremierSuite::themesToVec()
+//{
+//	std::vector<std::string> filenames;
+//	std::filesystem::path themeFolder = PREMIERSUITE_DATA_PATH / "themes";
+//
+//	for (const auto& entry : std::filesystem::recursive_directory_iterator(themeFolder)) {
+//		filenames.push_back(entry.path().filename().string());
+//	}
+//	return filenames;
+//}

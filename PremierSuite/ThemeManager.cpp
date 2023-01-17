@@ -9,29 +9,28 @@
 ThemeManager::ThemeManager()
 {
     //setTheme(Theme::DarkAlt1);
-    //ImGuiStyle* imStyle = &ImGui::GetStyle();
+    ImGuiStyle* imStyle = &ImGui::GetStyle();
     //// Main
-    //imStyle->WindowPadding = ImVec2(8, 8);
-    //imStyle->FramePadding = ImVec2(3, 2);
-    //imStyle->ItemSpacing = ImVec2(4, 4);
-    //imStyle->ItemInnerSpacing = ImVec2(4, 4);
-    //imStyle->IndentSpacing = 20.0f;
-    //imStyle->ScrollbarSize = 15.0f;
-    //imStyle->GrabMinSize = 5.0f;
-    //// Rounding
-    //imStyle->WindowRounding = 2.0f;
-    //imStyle->ChildRounding = 2.0f;
-    //imStyle->FrameRounding = 2.0f;
-    //imStyle->PopupRounding = 2.0f;
-    //imStyle->ScrollbarRounding = 10.0f;
-    //imStyle->GrabRounding = 2.0f;
-    //imStyle->TabRounding = 2.0f;
+    imStyle->WindowPadding = ImVec2(8, 8);
+    imStyle->FramePadding = ImVec2(3, 2);
+    imStyle->ItemSpacing = ImVec2(4, 4);
+    imStyle->ItemInnerSpacing = ImVec2(4, 4);
+    imStyle->IndentSpacing = 20.0f;
+    imStyle->ScrollbarSize = 15.0f;
+    imStyle->GrabMinSize = 5.0f;
+    // Rounding
+    imStyle->WindowRounding = 2.0f;
+    imStyle->ChildRounding = 2.0f;
+    imStyle->FrameRounding = 2.0f;
+    imStyle->PopupRounding = 2.0f;
+    imStyle->ScrollbarRounding = 10.0f;
+    imStyle->GrabRounding = 2.0f;
+    imStyle->TabRounding = 2.0f;
     
-    auto filepath = PREMIERSUITE_DATA_PATH / "theme.ini";
-   // LOG("Theme constructor called.");
+    //auto filepath = PREMIERSUITE_DATA_PATH / "theme.ini";
 
     //LOG("Theme filepath: {}", filepath.string());
-
+    std::filesystem::path filepath = PREMIERSUITE_DATA_PATH;
     if (!fileExists(filepath.string())) {
         std::ofstream outfile("theme.ini");
         outfile << m_theme;

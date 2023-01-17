@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ThemeManager.hpp"
+//#include "ThemeManager.hpp"
 
 #include "bakkesmod/plugin/bakkesmodplugin.h"
 #include "bakkesmod/plugin/pluginwindow.h"
@@ -36,11 +36,11 @@ class PremierSuite final:
 {
 public:
 
-	ThemeManager theme{};
-
+	//ThemeManager theme;
 	std::shared_ptr<bool> isOnSteam;
+
 	std::shared_ptr<bool> enabled;
-	std::shared_ptr<bool> themeEnabled;
+	//std::shared_ptr<bool> themeEnabled;
 
 	std::shared_ptr<bool> autoGG;
 	std::shared_ptr<bool> freeplayEnabled;
@@ -58,15 +58,15 @@ public:
 	std::shared_ptr<float> delayQueue;
 	std::shared_ptr<float> delayExit;
 
-	std::shared_ptr<bool> showEditor;
+	//std::shared_ptr<bool> showEditor;
 
 	std::shared_ptr<std::string> gui_keybind;
 	std::shared_ptr<std::string> plugin_keybind;
 	std::shared_ptr<std::string> customCode;
 	std::shared_ptr<std::string> workshopMap;
 	std::shared_ptr<std::string> freeplayMap;
-	std::shared_ptr<std::string> currentTheme;
-	std::shared_ptr<std::string> themeIniPath;
+	//std::shared_ptr<std::string> currentTheme;
+	//std::shared_ptr<std::string> themeIniPath;
 
 	std::shared_ptr<std::string> workshopMapDirPath;
 	std::vector<std::string> freeplayMaps;
@@ -97,16 +97,17 @@ public:
 
 	/// Custom render functions for GUI window
 	void renderSettingsTab();
+	//void renderVariablesTab();
+
 	void renderKeybindsTab();
-	void renderThemesTab();
+	//void renderThemesTab();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
 
-	std::vector<std::string> themesToVec();
+	//std::vector<std::string> themesToVec();
 
+	ImVec4 buttoncolor = { 88, 0, 44, 1};
 private:
-
-
 	void checkConflicts();
 
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
@@ -141,7 +142,7 @@ public:
 	void setEnableFreeplay(std::shared_ptr<bool> newBool);
 	void setEnableExit(std::shared_ptr<bool> newBool);
 	void setEnableQueue(std::shared_ptr<bool> newBool);
-	void setEnableThemes(std::shared_ptr<bool> newBool);
+	//void setEnableThemes(std::shared_ptr<bool> newBool);
 
 
 	void setDisableQueueCasual(std::shared_ptr<bool> newBool);
@@ -157,7 +158,7 @@ public:
 	void setNewPluginKeybind(std::string newKeybind);
 	void setFreeplayMap(std::string newMap);
 	void setWorkshopMap(std::string newMap);
-	void setTheme(std::string newTheme);
+	//void setTheme(std::string newTheme);
 
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
@@ -173,6 +174,24 @@ public:
 	std::string GetKeyFromValue(std::map<std::string, std::string>, std::string val);
 
 	std::vector<std::string> parseCfg(std::filesystem::path filePath, const std::string searchString, bool log);
+
+	void bindBMCvars();
+
+	/// BakkesMod CVars
+	std::shared_ptr<float> gameSpeed;
+	std::shared_ptr<bool> workshopRandom;
+	std::shared_ptr<bool> trainingVariance;
+	std::shared_ptr<bool> lowVariance;
+	std::shared_ptr<bool> medVariance;
+	std::shared_ptr<bool> highVariance;
+
+	std::shared_ptr<bool> randomMap;
+	std::shared_ptr<bool> allowMirrored;
+	std::shared_ptr<float> limitBoost;
+	//std::shared_ptr<float> delayExit;
+
+
+
 
 private:
 

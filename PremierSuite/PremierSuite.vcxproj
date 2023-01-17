@@ -121,7 +121,6 @@
     <ClCompile Include="GuiBase.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Setters.cpp" />
-    <ClCompile Include="ThemeManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Color.hpp" />
@@ -148,7 +147,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="PremierSuite.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="ThemeManager.hpp" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>

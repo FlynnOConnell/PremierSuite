@@ -6,10 +6,10 @@ void PremierSuite::setEnablePlugin(std::shared_ptr<bool> newBool)
 	cvarManager->getCvar("plugin_enabled").setValue(*newBool);
 }
 
-void PremierSuite::setEnableThemes(std::shared_ptr<bool> newBool)
-{
-	cvarManager->getCvar("themes_enabled").setValue(*newBool);
-}
+//void PremierSuite::setEnableThemes(std::shared_ptr<bool> newBool)
+//{
+//	cvarManager->getCvar("themes_enabled").setValue(*newBool);
+//}
 
 void PremierSuite::setEnableFreeplay(std::shared_ptr<bool> newBool)
 {
@@ -96,10 +96,10 @@ void PremierSuite::setFreeplayMap(std::string newMap)
 	setEnableFreeplay(freeplayEnabled);
 }
 
-void PremierSuite::setTheme(std::string newTheme)
-{
-	cvarManager->getCvar("ps_current_theme").setValue(newTheme);
-}
+//void PremierSuite::setTheme(std::string newTheme)
+//{
+//	cvarManager->getCvar("ps_current_theme").setValue(newTheme);
+//}
 
 
 void PremierSuite::setWorkshopMap(std::string newMap)
