@@ -66,7 +66,7 @@ void PremierSuite::RenderSettings()
 	//isGui = false;
 	//SetWidgetSizes();
 	//if (myRoboFont) ImGui::PushFont(myRoboFont);
-	ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip);
+	ImGui::BeginTabBar("#TabBarSettings", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip | ImGuiTabBarFlags_FittingPolicyResizeDown);
 	ImGui::Indent(5);
 	ImGui::Spacing();
 	renderSettingsTab();
@@ -91,7 +91,7 @@ void PremierSuite::Render()
 			ImGui::EndMenuBar();
 		}
 
-		ImGui::BeginTabBar("#TabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip | ImGuiTabBarFlags_FittingPolicyResizeDown);
+		ImGui::BeginTabBar("#TabBarWindow", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip | ImGuiTabBarFlags_FittingPolicyResizeDown);
 		ImGui::Indent(5);
 		ImGui::Spacing();
 		renderSettingsTab();
@@ -180,7 +180,7 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::PopID();
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
-			ImGui::PushID("GuiButtonID");
+			ImGui::PushID("GuiButtonKBID");
 
 			ImGui::Text("Open GUI");
 			ImGui::SameLine(150);
@@ -209,7 +209,7 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::Text("Bound key: % s\n", *gui_keybind);
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
-			ImGui::PushID("ToggleButtonID");
+			ImGui::PushID("ToggleButtonKBID");
 
 			if (*plugin_keybind == "") {
 				setNewPluginKeybind("Unset");
@@ -264,7 +264,7 @@ void PremierSuite::renderSettingsTab()
 
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-			ImGui::PushID("TogglePluginID");
+			ImGui::PushID("TogglePluginSettingsID");
 			if (ImGui::ToggleButton("", &*enabled))
 			{
 				setEnablePlugin(enabled);

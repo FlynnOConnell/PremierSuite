@@ -22,9 +22,12 @@ bool ModeSelector(int *currentMode, const std::vector<std::string> &modes, bool 
 
 bool ToggleButton(const char* str_id, bool* v)
 {
+    if (!v) { LOG("ToggleButton V is null"); return false; }
     ImVec4* colors = ImGui::GetStyle().Colors;
     ImVec2 p = ImGui::GetCursorScreenPos();
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    if (!draw_list) { LOG("ToggleButton colors is Null"); return false; }
 
     float height = ImGui::GetFrameHeight();
     float width = height * 1.55f;

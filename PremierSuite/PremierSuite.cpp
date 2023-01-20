@@ -8,8 +8,6 @@ std::filesystem::path BakkesModDataFolder;
 std::filesystem::path RocketLeagueExecutableFolder;
 std::shared_ptr<CVarManagerWrapper> _globalCvarManager;
 
-//extern ThemeManager theme;
-
 bool PremierSuite::isRanked(ServerWrapper server) {
 	if (server.GetPlaylist().GetbRanked() == 1) { return true; };
 	return false;
@@ -327,12 +325,16 @@ void PremierSuite::onLoad()
 
 	//ThemeManager theme{};
 
-	if (isOnSteam)
+	if (!gameWrapper->IsUsingSteamVersion())
 	{
+		workshopMapNames = {};
+	}
+	else {
 		std::filesystem::path workshop_path = WORKSHOP_MAPS_PATH;
 		if (!exists(workshop_path)) { LOG("Workshop path not a directory"); return; }
 		set_udk_files(WORKSHOP_MAPS_PATH);
 		workshopMapNames = std::vector<std::string>(KeysToVec(WorkshopMaps));
+
 	}
 
 	// Initialize vector of maps
@@ -340,7 +342,6 @@ void PremierSuite::onLoad()
 	keybindHolder = std::make_shared<std::string>();
 
 	registerCvars();
-	LOG("Cvars registered");
 	registerNotifiers();
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
@@ -435,8 +436,6 @@ void PremierSuite::registerCvars() {
 	//-----------------------------------------------------------------------------
 	// Enable / Disable Feature (BOOL) --------------------------------------------
 	//-----------------------------------------------------------------------------
-
-	//showEditor = std::make_shared<bool>(false);
 
 	// whole plugin
 	enabled = std::make_shared<bool>(true);
