@@ -4,7 +4,7 @@
 
 **PremierSuite** is a rocket league - bakkesmod plugin for manipulating both server-side and client-side rendering and presets. 
 
-> Other community-made **bakkesmod** plugins available [here](https://bakkesmod.com/plugins/).
+> Other community-made **bakkesmod** plugins available [here](https://bakkesplugins.com/).
 
 ### Custom Training Variables (C-Vars)
 
