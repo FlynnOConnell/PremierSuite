@@ -1,11 +1,6 @@
 ﻿#include "pch.h"
 #include "PremierSuite.h"
-//#include "Fonts.hpp"
-//#include "Icons/IconsFontAwesome5.hpp"
-//#include "Icons/IconsFontAwesome5Brands.hpp"
 #include "imgui_custom.hpp"
-
-//ThemeManager currTheme{};
 
 static void HelpMarker(const char* desc)
 {
@@ -96,11 +91,10 @@ void PremierSuite::Render()
 		ImGui::Spacing();
 		renderSettingsTab();
 		renderKeybindsTab();
-		///renderThemesTab();
+		//renderVariablesTab();
 		ImGui::EndTabBar();
-		ImGui::End(); // make sure this is within Begin() block, or alt-tabbing will crash due to EndChild() mismatch!
+		ImGui::End();
 	}
-	//if (myRoboFont) ImGui::PopFont();
 	ImGui::End();
 
 	if (!isWindowOpen_) {
@@ -511,6 +505,95 @@ void PremierSuite::renderSettingsTab()
 	}
 }
 
+//void PremierSuite::renderVariablesTab()
+//{
+//	if (ImGui::BeginTabItem("Variables")) {
+//
+//		ImGui::Spacing();
+//		ImGui::Text(
+//			"Custom Variables for training:\n"
+//			"Change how you load into freeplay, custom training and workshop maps.\n"
+//		);
+//
+//		ImGui::Dummy(ImVec2(0.0f, 10.0f));
+//		ImGui::Separator();
+//		ImGui::Dummy(ImVec2(0.0f, 5.0f));
+//
+//		/// Gamespeed ---------------------------------------------------------------------
+//		ImGui::Text("Slow-mo");
+//		ImGui::TextDisabled("(?)");
+//		if (ImGui::IsItemHovered())
+//			ImGui::SetTooltip("Gamespeed.\n"
+//				"Set to to slow game down, so you feel speedy in-game. \n"
+//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
+//			);
+//
+//		ImGui::SameLine(150);
+//
+//		ImGui::PushID("GameSpeed");
+//		if (ImGui::SliderFloat("", &*gameSpeed, 0.5, 1)) {
+//			_globalCvarManager->executeCommand("toggle sv_soccar_gamespeed " + std::to_string(*gameSpeed) + " 1");
+//		}
+//		ImGui::PopID();
+//
+//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
+//
+//		/// Variance ----------------------------------------------------------------------
+//		ImGui::Text("Training Variance");
+//
+//		ImGui::SameLine();
+//
+//		ImGui::PushID("Variance");
+//		ImGui::ToggleButton("Enable", &*trainingVariance);
+//		if (ImGui::IsItemHovered())
+//			ImGui::SetTooltip("Gamespeed.\n"
+//				"Set to to slow game down, so you feel speedy in-game. \n"
+//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
+//			);
+//		ImGui::PopID();
+//
+//		if (!*trainingVariance) {
+//			ImGui::PushID("VarDisabled");
+//			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+//			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+//		}
+//
+//		int e = findActiveButton();
+//		ImGui::RadioButton("radio a", &e, 0, lowVariance, medVariance, highVariance); ImGui::SameLine();
+//		ImGui::RadioButton("radio b", &e, 1); ImGui::SameLine();
+//		ImGui::RadioButton("radio c", &e, 2);
+//
+//		ImGui::Indent(5);
+//
+//		LOG("{}", btos(*lowVariance));
+//		if (!*trainingVariance) {
+//			ImGui::PopItemFlag();
+//			ImGui::PopStyleVar();
+//			ImGui::PopID();
+//		}
+//
+//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
+//
+//		ImGui::EndTabItem();
+//	}
+//}
+//
+/// <summary> Renders about window. </summary>
+void PremierSuite::renderAboutWindow(bool* open)
+{
+	if (!ImGui::Begin("About PremierSuite", open, ImGuiWindowFlags_AlwaysAutoResize))
+	{
+		ImGui::End();
+		return;
+	}
+	ImGui::Separator();
+	ImGui::Text("By Flynn OConnell with help Xenobyte and many BakkesMod Plugin Developers.");
+	ImGui::Text("This plugin was started by and an extension of instantsuite @iamxenobyte: https://xenobyte.dev/ ");
+	ImGui::Text("PremierSuite is licensed under the MIT License, see LICENSE for more information.");
+	ImGui::Text("Source code for this plugin is located at: https://github.com/NeuroPyPy/PremierSuite");
+	ImGui::End();
+}
+
 /// <summary> Renders main GUI theme settings. </summary>
 //void PremierSuite::renderThemesTab()
 //{
@@ -586,94 +669,4 @@ void PremierSuite::renderSettingsTab()
 //		ImGui::EndTabItem();
 //	}
 //}
-
-//void PremierSuite::renderVariablesTab()
-//{
-//	if (ImGui::BeginTabItem("Variables")) {
-//
-//		ImGui::Spacing();
-//		ImGui::Text(
-//			"Custom Variables for training:\n"
-//			"Change how you load into freeplay, custom training and workshop maps.\n"
-//		);
-//
-//		ImGui::Dummy(ImVec2(0.0f, 10.0f));
-//		ImGui::Separator();
-//		ImGui::Dummy(ImVec2(0.0f, 5.0f));
-//
-//		/// Gamespeed ---------------------------------------------------------------------
-//		ImGui::Text("Slow-mo");
-//		ImGui::TextDisabled("(?)");
-//		if (ImGui::IsItemHovered())
-//			ImGui::SetTooltip("Gamespeed.\n"
-//				"Set to to slow game down, so you feel speedy in-game. \n"
-//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
-//			);
-//
-//		ImGui::SameLine(150);
-//
-//		ImGui::PushID("GameSpeed");
-//		ImGui::SliderFloat("", &*gameSpeed, 0, 1);
-//		ImGui::PopID();
-//
-//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
-//
-//		/// Variance ----------------------------------------------------------------------
-//		ImGui::Text("Training Variance");
-//
-//		ImGui::SameLine();
-//
-//		ImGui::PushID("Variance");
-//		ImGui::Checkbox("Enable", &*trainingVariance);
-//		if (ImGui::IsItemHovered())
-//			ImGui::SetTooltip("Gamespeed.\n"
-//				"Set to to slow game down, so you feel speedy in-game. \n"
-//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
-//			);
-//		ImGui::PopID();
-//
-//		if (!*trainingVariance) {
-//			ImGui::PushID("VarDisabled");
-//			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-//			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-//		}
-//
-//		ImGui::SameLine(100);
-//		ImGui::RadioButton("Low", &*lowVariance);
-//
-//		ImGui::SameLine(150);
-//		ImGui::RadioButton("Medium", &*medVariance);
-//
-//		ImGui::SameLine(200);
-//		ImGui::RadioButton("High", &*highVariance);
-//
-//		if (!*trainingVariance) {
-//			ImGui::PopItemFlag();
-//			ImGui::PopStyleVar();
-//			ImGui::PopID();
-//		}
-//
-//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
-//
-//		ImGui::EndTabItem();
-//	}
-//}
-
-
-/// <summary> Renders about window. </summary>
-void PremierSuite::renderAboutWindow(bool* open)
-{
-	if (!ImGui::Begin("About PremierSuite", open, ImGuiWindowFlags_AlwaysAutoResize))
-	{
-		ImGui::End();
-		return;
-	}
-	ImGui::Separator();
-	ImGui::Text("By Flynn OConnell with help Xenobyte and many BakkesMod Plugin Developers.");
-	ImGui::Text("This plugin was started by and an extension of instantsuite @iamxenobyte: https://xenobyte.dev/ ");
-	ImGui::Text("PremierSuite is licensed under the MIT License, see LICENSE for more information.");
-	ImGui::Text("Source code for this plugin is located at: https://github.com/NeuroPyPy/PremierSuite");
-	ImGui::End();
-}
-
 

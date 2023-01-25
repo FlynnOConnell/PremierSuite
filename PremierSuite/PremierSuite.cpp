@@ -57,10 +57,6 @@ std::string PremierSuite::getClient()
 	}
 }
 
-// <summary>Return lines containing the given search string.</summary>
-// <param name="searchString">Name of the string to search</param>
-// <returns> Vector of std::string keybinds.</returns>
-
 // <summary>Check correct keybinds are set from CFG onLoad()</summary>
 void PremierSuite::handleKeybindCvar() {
 #ifdef DEBUG
@@ -323,8 +319,6 @@ void PremierSuite::onLoad()
 	isOnSteam = std::make_shared<bool>(gameWrapper->IsUsingSteamVersion());
 	RocketLeagueExecutableFolder = std::filesystem::current_path();
 
-	//ThemeManager theme{};
-
 	if (!gameWrapper->IsUsingSteamVersion())
 	{
 		workshopMapNames = {};
@@ -342,12 +336,13 @@ void PremierSuite::onLoad()
 	keybindHolder = std::make_shared<std::string>();
 
 	registerCvars();
+	
 	registerNotifiers();
 
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		this->handleKeybindCvar();
 		this->checkConflicts();
-
+		//this->bindBMCvars();
 		}, 1);
 
 	hookMatchEnded();
@@ -444,7 +439,6 @@ void PremierSuite::registerCvars() {
 		*enabled = cvar.getBoolValue();
 		if (*enabled && !hooked) hookMatchEnded();
 		if (!enabled && hooked) unhookMatchEnded();
-
 		}
 	);
 
@@ -619,29 +613,33 @@ void PremierSuite::registerCvars() {
 	);
 }
 
-void PremierSuite::bindBMCvars() {
-
-	//-----------------------------------------------------------------------------
-	// Bakkesmod Cvars ------------------------------------------------------------
-	//-----------------------------------------------------------------------------
-
-	gameSpeed = std::make_shared<float>(1);
-	_globalCvarManager->getCvar("sv_soccar_gamespeed").bindTo(gameSpeed);
-
-	workshopRandom = std::make_shared<bool>(false);
-	_globalCvarManager->getCvar("workshop_playlist_random").bindTo(workshopRandom);
-
-	trainingVariance = std::make_shared<bool>(false);
-	_globalCvarManager->getCvar("sv_training_enabled").bindTo(trainingVariance);
-
-	lowVariance = std::make_shared<bool>(false);
-	_globalCvarManager->getCvar("sv_training_enabled").bindTo(lowVariance);
-
-	medVariance = std::make_shared<bool>(false);
-	_globalCvarManager->getCvar("sv_training_enabled").bindTo(medVariance);
-
-	highVariance = std::make_shared<bool>(false);
-	_globalCvarManager->getCvar("sv_training_enabled").bindTo(highVariance);
-
-
-}
+//void PremierSuite::bindBMCvars() {
+//
+//	//-----------------------------------------------------------------------------
+//	// Bakkesmod Cvars ------------------------------------------------------------
+//	//-----------------------------------------------------------------------------
+//
+//	gameSpeed = std::make_shared<float>(1);
+//	_globalCvarManager->getCvar("sv_soccar_gamespeed").bindTo(gameSpeed);
+//
+//	workshopRandom = std::make_shared<bool>(false);
+//	//_globalCvarManager->getCvar("workshop_playlist_random").bindTo(workshopRandom);
+//
+//	trainingVariance = std::make_shared<bool>(false);
+//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(trainingVariance);
+//
+//	lowVariance = std::make_shared<bool>(false);
+//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(lowVariance);
+//
+//	*lowVariance = false;
+//
+//	medVariance = std::make_shared<bool>(false);
+//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(medVariance);
+//	*medVariance = false;
+//
+//	highVariance = std::make_shared<bool>(false);
+//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(highVariance);
+//	*highVariance = false;
+//
+//
+//}

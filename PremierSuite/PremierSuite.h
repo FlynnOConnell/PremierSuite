@@ -100,11 +100,8 @@ public:
 	//void renderVariablesTab();
 
 	void renderKeybindsTab();
-	//void renderThemesTab();
 	void renderMenu();
 	void renderAboutWindow(bool* p_open);
-
-	//std::vector<std::string> themesToVec();
 
 	ImVec4 buttoncolor = { 88, 0, 44, 1};
 private:
@@ -131,6 +128,8 @@ private:
 	void logVector(std::vector<std::string> inputVec);
 	void logVector(std::vector<std::filesystem::path> inputVec);
 	std::string btos(bool x);
+
+	void renderVariablesTab();
 
 public:
 
@@ -174,24 +173,21 @@ public:
 	std::string GetKeyFromValue(std::map<std::string, std::string>, std::string val);
 
 	std::vector<std::string> parseCfg(std::filesystem::path filePath, const std::string searchString, bool log);
-
-	void bindBMCvars();
+	//int findActiveButton();
+	//void bindBMCvars();
 
 	/// BakkesMod CVars
-	std::shared_ptr<float> gameSpeed;
-	std::shared_ptr<bool> workshopRandom;
-	std::shared_ptr<bool> trainingVariance;
-	std::shared_ptr<bool> lowVariance;
-	std::shared_ptr<bool> medVariance;
-	std::shared_ptr<bool> highVariance;
+	//std::shared_ptr<float> gameSpeed;
+	//std::shared_ptr<bool> workshopRandom;
+	//std::shared_ptr<bool> trainingVariance;
+	//std::shared_ptr<bool> lowVariance;
+	//std::shared_ptr<bool> medVariance;
+	//std::shared_ptr<bool> highVariance;
 
-	std::shared_ptr<bool> randomMap;
-	std::shared_ptr<bool> allowMirrored;
-	std::shared_ptr<float> limitBoost;
+	//std::shared_ptr<bool> randomMap;
+	//std::shared_ptr<bool> allowMirrored;
+	//std::shared_ptr<float> limitBoost;
 	//std::shared_ptr<float> delayExit;
-
-
-
 
 private:
 

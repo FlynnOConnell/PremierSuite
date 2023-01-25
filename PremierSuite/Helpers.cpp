@@ -135,6 +135,13 @@ void PremierSuite::checkConflicts()
 	return;
 }
 
+//int PremierSuite::findActiveButton() {
+//	if (*lowVariance) { return 0; }
+//	else if (*medVariance) { return 1; }
+//	else if (*highVariance) { return 2; }
+//	else { return 0; }
+//}
+
 //std::vector<std::string> PremierSuite::themesToVec()
 //{
 //	std::vector<std::string> filenames;

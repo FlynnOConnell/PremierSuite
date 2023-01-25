@@ -18,7 +18,6 @@
 #include <IMGUI/imgui.h>
 #include <IMGUI/imgui_stdlib.h>
 
-// mahi-gui custom ImGui
 namespace ImGui {
 
 bool ModeSelector(int* currentMode, const std::vector<std::string>& modes, bool horizontal);
@@ -26,10 +25,6 @@ bool ModeSelector(int* currentMode, const std::vector<std::string>& modes, bool 
 bool ToggleButton(const char* str_id, bool* v);
 bool ButtonColored(const char* label, const ImVec4& color, const ImVec2& size = ImVec2(0,0));
 bool ModeSelector(int* currentMode, const std::vector<std::string>& modes, bool horizontal = true);
-
-void StyleColorsMahiDark1();
-void StyleColorsMahiDark2();
-void StyleColorsMahiDark3();
-void StyleColorsMahiDark4();
+bool RadioButton(const char* label, int* v, int v_button, std::shared_ptr<bool> lowVar, std::shared_ptr<bool> medVar, std::shared_ptr<bool> HighVar );
 
 } // namespace ImGui
