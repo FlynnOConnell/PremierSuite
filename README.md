@@ -6,6 +6,8 @@
 
 > Other community-made **bakkesmod** plugins available [here](https://bakkesplugins.com/).
 
+Any and all help is welcome for updates and features. Feel free to ask questions about the codebase on discord: Neuro#0618
+
 ### Custom Training Variables (C-Vars)
 
 Just like you can change variables in bakkesmod i.e. ballspeed, trajectory, starting vector:
