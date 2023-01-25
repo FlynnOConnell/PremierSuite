@@ -129,7 +129,7 @@ private:
 	void logVector(std::vector<std::filesystem::path> inputVec);
 	std::string btos(bool x);
 
-	void renderVariablesTab();
+	//void renderVariablesTab();
 
 public:
 

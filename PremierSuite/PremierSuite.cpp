@@ -132,7 +132,7 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 	if (server.IsNull()) { return; }
 	if (queue) {
 		float delaySetting = *delayQueue;
-		LOG("Game ended (callbackSetDelay called).");
+		LOG("Game ended (callbackSetDelay called): Delay: {}.", std::to_string(*delayQueue));
 	}
 	else { float delaySetting = *delayExit; };
 	if (*autoGG) { delay = delaySetting + *autoGGDelay; }
@@ -259,7 +259,7 @@ void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string ev
 
 	if (*enableQueue) {
 		LOG("EnableQueue is true, calling callbacksetDelay.");
-		callbackSetDelay(server, params, eventName, [this]() { this->executeQueue(); }, false);
+		callbackSetDelay(server, params, eventName, [this]() { this->executeQueue(); }, true);
 	}
 	if (*exitEnabled) {
 		LOG("MainMenu exit is true, calling callbacksetDelay.");
