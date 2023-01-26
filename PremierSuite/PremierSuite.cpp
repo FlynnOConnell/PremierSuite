@@ -126,17 +126,18 @@ void PremierSuite::handleKeybindCvar() {
 
 void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue) {
 
-	LOG("Game ended (callbackSetDelay called).");
-	float delay = 0;
-	float delaySetting = 0;
+	float delay;
 	if (server.IsNull()) { return; }
 	if (queue) {
-		float delaySetting = *delayQueue;
-		LOG("Game ended (callbackSetDelay called): Delay: {}.", std::to_string(*delayQueue));
+		delay = *delayQueue;
+		LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
 	}
-	else { float delaySetting = *delayExit; };
-	if (*autoGG) { delay = delaySetting + *autoGGDelay; }
-	else { delay = *delayExit; }
+	else {
+		delay = *delayExit;
+		LOG("Game ended: Exit Delay: {}.", std::to_string(*delayExit));
+	};
+	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
+	else { delay = *delayExit; }*/
 	if (isTournament(server)) {
 		return;
 	}
@@ -150,7 +151,36 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 			return;
 		}
 	}
-	gameWrapper->SetTimeout([callback = std::move(callback)](...) {callback(); }, delaySetting);
+	LOG("Final Delay: {}", std::to_string(delay));
+	gameWrapper->SetTimeout([callback = std::move(callback)](...) {callback(); }, delay);
+}
+
+void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::string eventName) {
+
+	float delay;
+	if (server.IsNull()) { return; }
+	delay = *delayQueue;
+	LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
+
+	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
+	else { delay = *delayExit; }*/
+	if (isTournament(server)) {
+		return;
+	}
+	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual)) {
+		if (isStandard(server) && *disableExitCasual) {
+			LOG("Casual exit disabled: returning");
+			return;
+		}
+		if (isPrivate(server) && *disablePrivate) {
+			LOG("private disabled, returning");
+			return;
+		}
+	}
+
+	gameWrapper->SetTimeout([this](GameWrapper* gw) {
+		this->executeQueue();
+		}, *delayQueue);
 }
 
 void PremierSuite::executeQueue()
@@ -259,7 +289,7 @@ void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string ev
 
 	if (*enableQueue) {
 		LOG("EnableQueue is true, calling callbacksetDelay.");
-		callbackSetDelay(server, params, eventName, [this]() { this->executeQueue(); }, true);
+		callbackQueueDelay(server, params, eventName);
 	}
 	if (*exitEnabled) {
 		LOG("MainMenu exit is true, calling callbacksetDelay.");

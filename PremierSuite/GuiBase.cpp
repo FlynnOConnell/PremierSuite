@@ -480,13 +480,10 @@ void PremierSuite::renderSettingsTab()
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Disable the all automatic-exit settings for casual matches..");
 
-				ImGui::SameLine(150);
-
-
 				ImGui::SetNextItemWidth(long_width);
 				
 				ImGui::PushID("exitDelayTimeID");
-				if (ImGui::SliderFloat("", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
+				if (ImGui::SliderFloat("Auto-exit Delay", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
 					setDelayExit(delayExit);
 				}
 				if (ImGui::IsItemHovered())
@@ -587,7 +584,8 @@ void PremierSuite::renderAboutWindow(bool* open)
 		return;
 	}
 	ImGui::Separator();
-	ImGui::Text("By Flynn OConnell with help Xenobyte and many BakkesMod Plugin Developers.");
+	ImGui::Text("PremierSuite: Made by Neuro with help Xenobyte and many BakkesMod Plugin Developers.");
+	ImGui::Text("Contact me with bugs or ideas on discord: Neuro#0618");
 	ImGui::Text("This plugin was started by and an extension of instantsuite @iamxenobyte: https://xenobyte.dev/ ");
 	ImGui::Text("PremierSuite is licensed under the MIT License, see LICENSE for more information.");
 	ImGui::Text("Source code for this plugin is located at: https://github.com/NeuroPyPy/PremierSuite");

@@ -109,6 +109,7 @@ private:
 
 	void onMatchEnd(ServerWrapper server, void* params, std::string eventName);
 	void callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue);
+	void callbackQueueDelay(ServerWrapper server, void* params, std::string eventName);
 
 	void executeWorkshop();
 	void executeCustomTraining();
