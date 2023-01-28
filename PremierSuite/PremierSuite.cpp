@@ -160,6 +160,11 @@ void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::s
 	float delay;
 	if (server.IsNull()) { return; }
 	delay = *delayQueue;
+	if (delay >= *delayExit && delay < *delayExit + 2)
+	{
+		delay = *delayQueue + 2;
+	}
+
 	LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
 
 	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
@@ -243,7 +248,9 @@ void PremierSuite::executeCustomTraining()
 
 void PremierSuite::executeWorkshop()
 {
-	if (!isOnSteam)			return;
+	if (!gameWrapper->IsUsingSteamVersion()) {
+		return;
+	}
 	auto game = gameWrapper->GetOnlineGame();
 	std::string workshop_map = cvarManager->getCvar("workshop_map").getStringValue();
 	if (workshop_map == "") { return; }
