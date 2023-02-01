@@ -201,7 +201,14 @@ void PremierSuite::executeQueue()
 			return;
 		}
 	}
-	cvarManager->executeCommand("queue");
+	if (loading) {
+		awaitQueue = true;
+		LOG("awaitQueue = true");
+	}
+	else {
+		LOG("Loading is false, initiating queue.");
+		cvarManager->executeCommand("queue");
+	}
 }
 
 void PremierSuite::executeFreeplay()
@@ -289,15 +296,12 @@ void PremierSuite::executeMainMenu()
 void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string eventName)
 {
 	LOG("Game ended (OnMatchEnd called).");
-
 	if (server.IsNull()) {
 		LOG("Server is Null.");
-		return; }
-
-	if (*enableQueue) {
-		LOG("EnableQueue is true, calling callbacksetDelay.");
-		callbackQueueDelay(server, params, eventName);
+		return;
 	}
+	if (!*enabled) return;
+
 	if (*exitEnabled) {
 		LOG("MainMenu exit is true, calling callbacksetDelay.");
 		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); }, false);
@@ -318,6 +322,11 @@ void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string ev
 					callbackSetDelay(server, params, eventName, [this]() { this->executeWorkshop(); }, false);
 				}
 	}
+
+	if (*enableQueue) {
+		LOG("EnableQueue is true, calling callbacksetDelay.");
+		callbackQueueDelay(server, params, eventName);
+	}
 }
 
 void PremierSuite::hookMatchEnded()
@@ -332,6 +341,28 @@ void PremierSuite::unhookMatchEnded()
 	gameWrapper->UnhookEvent(matchEndedEvent);
 	hooked = false;
 	logHookType("Unhooked");
+}
+
+void PremierSuite::hookLoadingScreenPre() 
+{
+	gameWrapper->HookEventWithCaller<ServerWrapper>("Function TAGame.LoadingScreen_TA.HandlePreLoadMap",
+		[this](ServerWrapper server, void* params, std::string eventname) {
+			LOG("Loading screen...");
+			loading = true;
+		});
+}
+
+void PremierSuite::hookLoadingScreenPost()
+{
+	gameWrapper->HookEventWithCaller<ServerWrapper>("Function TAGame.LoadingScreen_TA.HandlePostLoadMap",
+		[this](ServerWrapper server, void* params, std::string eventname) {
+			if (awaitQueue) {
+				cvarManager->executeCommand("queue");
+				LOG("Queue called");
+				awaitQueue = false;
+			}
+			loading = false;
+		});
 }
 
 void PremierSuite::logHookType(const char* const hookType) const
@@ -383,6 +414,8 @@ void PremierSuite::onLoad()
 		}, 1);
 
 	hookMatchEnded();
+	hookLoadingScreenPre();
+	hookLoadingScreenPost();
 }
 
 void PremierSuite::registerNotifiers() {

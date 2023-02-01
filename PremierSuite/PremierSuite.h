@@ -121,6 +121,8 @@ private:
 	void registerCvars();
 	void hookMatchEnded();
 	void unhookMatchEnded();
+	void hookLoadingScreenPre();
+	void hookLoadingScreenPost();
 	void logHookType(const char* const hookType) const;
 	static constexpr const char* matchEndedEvent = "Function TAGame.GameEvent_Soccar_TA.EventMatchEnded";
 
@@ -192,6 +194,10 @@ public:
 private:
 
 	bool hooked = false;
+	bool loading = false;
+	bool awaitQueue = false;
+
+
 	bool enableCustomMaps = false;
 	bool refreshCustomMapPaths = true;
 	std::map<std::string, std::string> maps;
