@@ -144,7 +144,6 @@ public:
 	void setEnableQueue(std::shared_ptr<bool> newBool);
 	//void setEnableThemes(std::shared_ptr<bool> newBool);
 
-
 	void setDisableQueueCasual(std::shared_ptr<bool> newBool);
 	void setDisableExitCasual(std::shared_ptr<bool> newBool);
 	void setDisablePrivate(std::shared_ptr<bool> newBool);
