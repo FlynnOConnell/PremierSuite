@@ -15,7 +15,7 @@ Just like you can change variables in bakkesmod i.e. ballspeed, trajectory, star
 - Preload variables to load into training, freeplay or workshops with these presets.
 
 - Debug ball/player: This interesting command allows players to print either their ball or player info on the console.
-- Gamespeed1: Players can input values in the range of 0.01 to 10 and either decrease or increase the game speed.
+- Gamespeed: Players can input values in the range of 0.01 to 10 and either decrease or increase the game speed.
 - Writeconfig: This command allows you to make your key configuration changes permanent. You can do so by writing all the changes in the config file.
 - Training_predictball: This command is really helpful while scoring. It draws a line and allows players to predict the ball’s trajectory.
 - List maps: All the maps that are in the game are listed through this command.
