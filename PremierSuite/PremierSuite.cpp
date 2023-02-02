@@ -65,11 +65,29 @@ void PremierSuite::handleKeybindCvar() {
 #else 
 	std::vector<std::string> guiKeybinds = parseCfg(BINDS_FILE_PATH, "ps_gui", false);
 	std::vector<std::string> pluginKeybinds = parseCfg(BINDS_FILE_PATH, "change_ps_enabled", false);
+	
 #endif
 	if (guiKeybinds.empty()) {
-		_globalCvarManager->log("No bind in binds config...Setting default GUI keybind: F3");
-		_globalCvarManager->executeCommand("bind F3 ps_gui");
-		*gui_keybind = "F3";
+		// No keybind with ps_gui, and no F3 slot is open
+		std::vector<std::string> F3Keybinds = parseCfg(BINDS_FILE_PATH, "F3", false);
+		if (F3Keybinds.empty()) {
+			_globalCvarManager->log("No bind in binds config & F3 is open...Setting default GUI keybind: F3");
+			_globalCvarManager->executeCommand("bind F3 ps_gui");
+			*gui_keybind = "F3";
+		}
+		else {
+			std::vector<std::string> F7Keybinds = parseCfg(BINDS_FILE_PATH, "F7", false);
+			if (F7Keybinds.empty()) {
+				_globalCvarManager->log("No bind in binds config, F3 is taken but F7 is open...Setting default GUI keybind: F7");
+				_globalCvarManager->executeCommand("bind F7 ps_gui");
+				*gui_keybind = "F7";
+			}
+			else {
+				_globalCvarManager->log("No bind in binds config, but F3 and F7 are used...No keybind being set");
+				*gui_keybind = "Unset";
+			}
+		}
+		
 	}
 	if ((size_t)guiKeybinds.size() == 1) {
 		cvarManager->log("Keybind to open gui found in config: " + guiKeybinds[0]);
@@ -126,16 +144,8 @@ void PremierSuite::handleKeybindCvar() {
 
 void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::string eventName, std::function<void()> callback, bool queue) {
 
-	float delay;
 	if (server.IsNull()) { return; }
-	if (queue) {
-		delay = *delayQueue;
-		LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
-	}
-	else {
-		delay = *delayExit;
-		LOG("Game ended: Exit Delay: {}.", std::to_string(*delayExit));
-	};
+
 	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
 	else { delay = *delayExit; }*/
 	if (isTournament(server)) {
@@ -151,19 +161,13 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 			return;
 		}
 	}
-	LOG("Final Delay: {}", std::to_string(delay));
-	gameWrapper->SetTimeout([callback = std::move(callback)](...) {callback(); }, delay);
+	LOG("Final Delay: {}", std::to_string(*delayExit));
+	gameWrapper->SetTimeout([callback = std::move(callback)](...) {callback(); }, *delayExit);
 }
 
 void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::string eventName) {
 
-	float delay;
 	if (server.IsNull()) { return; }
-	delay = *delayQueue;
-	if (delay >= *delayExit && delay < *delayExit + 2)
-	{
-		delay = *delayQueue + 2;
-	}
 
 	LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
 
