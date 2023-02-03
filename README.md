@@ -2,15 +2,17 @@
 
 # PremierSuite - Rocket League Utility
 
-**PremierSuite** is a rocket league - bakkesmod plugin for manipulating both server-side and client-side rendering and presets. 
+**PremierSuite** is a rocket league - bakkesmod plugin for manipulating both server-side and client-side rendering and presets. An adaptation of instantsuite, but now you can load into Freeplay, Custom Training, Workshop Maps (Steam only, epic games likely in the future) and the main menu. Also adds a GUI and functionality for an integrated GUI available via keybind. 
+
+The default GUI keybind is F3. If F3 is already in-use, it will be bound to F7. If this is also in use, there will be no preset keybind but you can apply your own by opening the BM menu(F2) -> Plugins -> PremierSuite -> Keybinds and set it there.
 
 > Other community-made **bakkesmod** plugins available [here](https://bakkesplugins.com/).
 
 Any and all help is welcome for updates and features. Feel free to ask questions about the codebase on discord: Neuro#0618
 
-### Custom Training Variables (C-Vars)
+### Roadmap: Custom Training Variables (C-Vars)
 
-Just like you can change variables in bakkesmod i.e. ballspeed, trajectory, starting vector:
+I'm working on pre-loaded variables on instant exit. Just like you can change variables in bakkesmod i.e. ballspeed, trajectory, starting vector:
 
 - Preload variables to load into training, freeplay or workshops with these presets.
 
