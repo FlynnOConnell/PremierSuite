@@ -21,9 +21,13 @@ bool PremierSuite::isTournament(ServerWrapper server) {
 	return server.GetPlaylist().IsTournamentMatch();
 }
 
-bool PremierSuite::isStandard(ServerWrapper server) {
-	if (server.GetPlaylist().GetbStandard() == 1) { return true; };
-	return false;
+bool PremierSuite::isCasual(ServerWrapper server) {
+	if (server.GetPlaylist().GetbRanked() == 0) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
 std::string PremierSuite::getInGameMap()
@@ -65,7 +69,6 @@ void PremierSuite::handleKeybindCvar() {
 #else 
 	std::vector<std::string> guiKeybinds = parseCfg(BINDS_FILE_PATH, "ps_gui", false);
 	std::vector<std::string> pluginKeybinds = parseCfg(BINDS_FILE_PATH, "change_ps_enabled", false);
-	
 #endif
 	if (guiKeybinds.empty()) {
 		// No keybind with ps_gui, and no F3 slot is open
@@ -152,7 +155,7 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 		return;
 	}
 	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual)) {
-		if (isStandard(server) && *disableExitCasual) {
+		if (isCasual(server) && *disableExitCasual) {
 			LOG("Casual exit disabled: returning");
 			return;
 		}
@@ -177,7 +180,7 @@ void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::s
 		return;
 	}
 	if (!server.IsNull() && (server.GetPlaylist().memory_address != NULL) && (*disablePrivate || *disableExitCasual)) {
-		if (isStandard(server) && *disableExitCasual) {
+		if (isCasual(server) && *disableExitCasual) {
 			LOG("Casual exit disabled: returning");
 			return;
 		}
@@ -186,7 +189,6 @@ void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::s
 			return;
 		}
 	}
-
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		this->executeQueue();
 		}, *delayQueue);

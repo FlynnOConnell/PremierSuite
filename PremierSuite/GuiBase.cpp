@@ -153,12 +153,11 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::Indent(5);
 
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
-			ImGui::PushID("KeybindInput");
 
 			ImGui::SetNextItemWidth(long_width / 2);
 
 			char keybindInput[128] = "";
-			if (ImGui::InputTextWithHint("", "Keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank)) {
+			if (ImGui::InputTextWithHint("##KeybindInputText", "Keybind", keybindInput, IM_ARRAYSIZE(keybindInput), ImGuiInputTextFlags_CharsNoBlank)) {
 				*keybindHolder = keybindInput;
 			}
 
@@ -171,15 +170,12 @@ void PremierSuite::renderKeybindsTab()
 					"NumPad +, -, * are just Add, Subtract, Multiply. "
 				);
 
-			ImGui::PopID();
-
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
-			ImGui::PushID("GuiButtonKBID");
 
 			ImGui::Text("Open GUI");
 			ImGui::SameLine(150);
 
-			if (ImGui::Button("set"))
+			if (ImGui::Button("set##PSGUISetter"))
 			{
 				std::string unbind = "unbind " + *gui_keybind + " " + "ps_gui";
 				std::string bind = "bind " + *keybindHolder + " " + "ps_gui";
@@ -189,8 +185,6 @@ void PremierSuite::renderKeybindsTab()
 				setNewGUIKeybind(*keybindHolder);
 				_globalCvarManager->executeCommand("writeconfig", true);
 			}
-
-			ImGui::PopID();
 
 			ImGui::SameLine();
 			ImGui::TextDisabled("(?)");
@@ -203,7 +197,6 @@ void PremierSuite::renderKeybindsTab()
 			ImGui::Text("Bound key: % s\n", *gui_keybind);
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
-			ImGui::PushID("ToggleButtonKBID");
 
 			if (*plugin_keybind == "") {
 				setNewPluginKeybind("Unset");
@@ -211,7 +204,7 @@ void PremierSuite::renderKeybindsTab()
 
 			ImGui::Text("Toggle Plugin");
 			ImGui::SameLine(150);
-			if (ImGui::Button("set"))
+			if (ImGui::Button("set##CHANGEENABLEDSETTER"))
 			{
 				_globalCvarManager->executeCommand("unbind " + *plugin_keybind + " change_ps_enabled");
 				_globalCvarManager->executeCommand("bind " + *keybindHolder + " change_ps_enabled");
@@ -226,7 +219,6 @@ void PremierSuite::renderKeybindsTab()
 				);
 			ImGui::SameLine();
 			ImGui::Text("Bound key: % s\n", *plugin_keybind);
-			ImGui::PopID();
 
 			ImGui::Dummy(ImVec2(0.0f, 10.0f));
 
@@ -258,13 +250,11 @@ void PremierSuite::renderSettingsTab()
 
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
-			ImGui::PushID("TogglePluginSettingsID");
-			if (ImGui::ToggleButton("", &*enabled))
+			if (ImGui::ToggleButton("##ToggleButtonPlugin", &*enabled))
 			{
 				setEnablePlugin(enabled);
 				_globalCvarManager->executeCommand("writeconfig", false);
 			}
-			ImGui::PopID();
 
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Enable/Disable the plugin and all of its functionality.\n"
@@ -273,17 +263,14 @@ void PremierSuite::renderSettingsTab()
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			if (!*enabled) {
-				ImGui::PushID("WholePluginDisabled");
 				ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 			}
 
-			ImGui::PushID("DisablePluginPrivate");
 			if (ImGui::Checkbox("Disable Plugin for Private Matches", &*disablePrivate)) {
 				setDisablePrivate(disablePrivate);
 				_globalCvarManager->executeCommand("writeconfig", false);
 			}
-			ImGui::PopID();
 
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("When this box is checked, the plugin will deactivate during private matches.");
@@ -297,38 +284,40 @@ void PremierSuite::renderSettingsTab()
 		// Auto-Queue Options
 		//-----------------------------------------------------------------------------
 		{
-			ImGui::Text("Auto-Queue Options");
-			ImGui::Dummy(ImVec2(0.0f, 5.0f));
-
-			ImGui::PushID("AutoQueueEnableID");
-			if (ImGui::Checkbox("Enable", &*enableQueue)) {
-				setEnableQueue(enableQueue);
-				_globalCvarManager->executeCommand("writeconfig", false);
-			}
-			ImGui::PopID();
-
+			ImGui::Text("Auto-Queue");
+			ImGui::SameLine();
+			ImGui::TextDisabled("(?)");
 			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("Automatically queue when an online match has ended.");
+				ImGui::SetTooltip("Auto queue immediately, or with delay.\n"
+					"This will queue the same game-mode or modes you were previously queueing."
+				);
+
 			ImGui::SameLine(150);
 
 			ImGui::SetNextItemWidth(long_width);
-			ImGui::PushID("queueDelayTime");
-			if (ImGui::SliderFloat("", &*delayQueue, 0.0f, 10.0f, "Delay: %.1f s")) {
+			if (ImGui::SliderFloat("##DelayQueueFloatSlider", &*delayQueue, 0.0f, 10.0f, "Delay: %.1f s")) {
 				setDelayQueue(delayQueue);
 				_globalCvarManager->executeCommand("writeconfig", false);
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Set a delay for the auto-queue.");
-			ImGui::PopID();
 
-			ImGui::PushID("disableQ");
-			if (ImGui::Checkbox("Disable for Casual", &*disableQueueCasual)) {
+			ImGui::Dummy(ImVec2(0.0f, 5.0f));
+
+			if (ImGui::Checkbox("Enable##EnableQueue", &*enableQueue)) {
+				setEnableQueue(enableQueue);
+				_globalCvarManager->executeCommand("writeconfig", false);
+			}
+
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Automatically queue when an online match has ended.");
+			
+			if (ImGui::Checkbox("Disable for Casual##DisableQueueCasual", &*disableQueueCasual)) {
 				setDisableQueueCasual(disableQueueCasual);
 				_globalCvarManager->executeCommand("writeconfig", false);
 			}
 			if (ImGui::IsItemHovered())
 				ImGui::SetTooltip("Disable the automatic queue for casual games.");
-			ImGui::PopID();
 		}
 
 		ImGui::Dummy(ImVec2(0.0f, 5.0f));
@@ -339,7 +328,7 @@ void PremierSuite::renderSettingsTab()
 		// Auto-Exit Options
 		//-----------------------------------------------------------------------------
 		{
-			ImGui::Text("Auto-Exit Options");
+			ImGui::Text("Auto-Exit");
 			ImGui::SameLine();
 			ImGui::TextDisabled("(?)");
 			if (ImGui::IsItemHovered())
@@ -347,44 +336,47 @@ void PremierSuite::renderSettingsTab()
 					"Current options: Main-Menu, Freeplay, Custom Training Pack.\n"
 					"Workshops, private game modes and specialty game modes are on the way.\n\n"
 					"*If multiple exit-options are enabled, the uppmost most selection will be executed.");
+
+
+			ImGui::SameLine(150);
+			ImGui::SetNextItemWidth(long_width);
+			if (ImGui::SliderFloat("##exitDelayTimeID", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
+				setDelayExit(delayExit);
+			}
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("Set a delay for auto-exit options (options are below).");
+
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			/// Freeplay ----------------------------------------
 			{
-				//ImGui::PushID("FreeplayID");
-				if (ImGui::Checkbox("Freeplay", &*freeplayEnabled)) {
+				if (ImGui::Checkbox("Freeplay##FreeplayCheckbox", &*freeplayEnabled)) {
 					setEnableFreeplay(freeplayEnabled);
 					_globalCvarManager->executeCommand("writeconfig", false);
 				}
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Instant-exit to Freeplay.\n");
 				ImGui::SameLine(150);
-				//ImGui::PopID();
 
 				std::string currMap = *freeplayMap;
 				const char* currMapChr = currMap.c_str();
 				int index = std::distance(freeplayMaps.begin(), std::find(freeplayMaps.begin(), freeplayMaps.end(), currMap));
-
-				//ImGui::PushID("FreeplayComboID");
+		
 				ImGui::SetNextItemWidth(long_width);
-				if (ImGui::SearchableCombo("##Freeplay Map:", &index, freeplayMaps, "no maps found", "type to search"))
+				if (ImGui::SearchableCombo("##FreeplaySearchCombo", &index, freeplayMaps, "no maps found", "type to search"))
 				{
 					setFreeplayMap(freeplayMaps[index]);
 					ImGui::EndCombo();
 				}
-				//ImGui::PopID();
 			}
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			/// Custom Training ----------------------------------------
 			{
-				ImGui::PushID("CustomTrainingID");
-				if (ImGui::Checkbox("Custom Training", &*customEnabled)) {
+				if (ImGui::Checkbox("Custom Training##CustomTrainingCheckbox", &*customEnabled)) {
 					setEnableCustomTraining(customEnabled);
 					_globalCvarManager->executeCommand("writeconfig", false);
 				}
-				ImGui::PopID();
-
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Instant-exit to Custom Training.\n");
 				ImGui::SameLine(150);
@@ -394,9 +386,7 @@ void PremierSuite::renderSettingsTab()
 				ImGuiInputTextFlags ctflags = ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_EnterReturnsTrue;
 				ImGui::SetNextItemWidth(long_width);
 
-				ImGui::PushID("CustomTrainingInputID");
-				bool ctInput = ImGui::InputTextWithHint("", c.c_str(), &str0, ctflags);
-				ImGui::PopID();
+				bool ctInput = ImGui::InputTextWithHint("##CustomTrainingInputID", c.c_str(), &str0, ctflags);
 
 				if (ctInput) {
 					setCustomTrainingCode(str0);
@@ -417,17 +407,14 @@ void PremierSuite::renderSettingsTab()
 			/// Workshop Maps ----------------------------------------
 			{
 				if (!*isOnSteam) {
-					ImGui::PushID("NotSteam");
 					ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 					ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
 				}
 
-				//ImGui::PushID("WorkshopID");
-				if (ImGui::Checkbox("Workshop", &*workshopEnabled)) {
+				if (ImGui::Checkbox("Workshop##WorkshopEnabledCheckbox", &*workshopEnabled)) {
 					setEnableWorkshop(workshopEnabled);
 					_globalCvarManager->executeCommand("writeconfig", false);
 				}
-				//ImGui::PopID();
 
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Instantly load into a workshop map.\n");
@@ -439,21 +426,18 @@ void PremierSuite::renderSettingsTab()
 				
 				ImGui::SetNextItemWidth(long_width);
 
-				//ImGui::PushID("WorkshopComboID");
-				if (ImGui::SearchableCombo("##Workshop", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
+				if (ImGui::SearchableCombo("##WorkshopComboID", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
 				{
 					setWorkshopMap(workshopMapNames[workshop_index]);
 					setEnableWorkshop(workshopEnabled);
 					ImGui::EndCombo();
 				}
-				//ImGui::PopID();
 
 				if (!*isOnSteam) {
 					ImGui::PopItemFlag();
 					ImGui::PopStyleVar();
 					if (ImGui::IsItemHovered())
 						ImGui::SetTooltip("Workshops incoming for epic.\n");
-					ImGui::PopID();
 				}
 			}
 
@@ -473,29 +457,18 @@ void PremierSuite::renderSettingsTab()
 
 			/// Disable Exit for Casual
 			{
-				if (ImGui::Checkbox("Disable for Casual", &*disableExitCasual)) {
+				if (ImGui::Checkbox("Disable for Casual##DisableExitCasual", &*disableExitCasual)) {
 					setDisableExitCasual(disableExitCasual);
 					_globalCvarManager->executeCommand("writeconfig", false);
 				}
 				if (ImGui::IsItemHovered())
 					ImGui::SetTooltip("Disable the all automatic-exit settings for casual matches..");
-
-				ImGui::SetNextItemWidth(long_width);
-				
-				ImGui::PushID("exitDelayTimeID");
-				if (ImGui::SliderFloat("Auto-exit Delay", &*delayExit, 0.0f, 10.0f, "Delay: %.1f s")) {
-					setDelayExit(delayExit);
-				}
-				if (ImGui::IsItemHovered())
-					ImGui::SetTooltip("Set a delay for auto-exit options (options are below).");
-				ImGui::PopID();
 			}
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
 			if (!*enabled) {
 				ImGui::PopItemFlag();
 				ImGui::PopStyleVar();
-				ImGui::PopID();
 			}
 		}
 		ImGui::EndTabItem();

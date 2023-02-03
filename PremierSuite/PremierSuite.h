@@ -164,7 +164,7 @@ public:
 	bool isRanked(ServerWrapper server);
 	bool isPrivate(ServerWrapper server);
 	bool isTournament(ServerWrapper server);
-	bool isStandard(ServerWrapper server);
+	bool isCasual(ServerWrapper server);
 
 	const char* getCurrentFreeplayMap();
 
