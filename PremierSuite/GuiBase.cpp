@@ -361,13 +361,14 @@ void PremierSuite::renderSettingsTab()
 				std::string currMap = *freeplayMap;
 				const char* currMapChr = currMap.c_str();
 				int index = std::distance(freeplayMaps.begin(), std::find(freeplayMaps.begin(), freeplayMaps.end(), currMap));
-		
+			
 				ImGui::SetNextItemWidth(long_width);
-				if (ImGui::SearchableCombo("##FreeplaySearchCombo", &index, freeplayMaps, "no maps found", "type to search"))
+				if (ImGui::SearchableCombo("##FPCombo", &index, freeplayMaps, "no maps found", "type to search"))
 				{
 					setFreeplayMap(freeplayMaps[index]);
 					ImGui::EndCombo();
 				}
+	
 			}
 			ImGui::Dummy(ImVec2(0.0f, 5.0f));
 
@@ -425,7 +426,6 @@ void PremierSuite::renderSettingsTab()
 				int workshop_index = std::distance(workshopMapNames.begin(), std::find(workshopMapNames.begin(), workshopMapNames.end(), currentWorkshopMap));
 				
 				ImGui::SetNextItemWidth(long_width);
-
 				if (ImGui::SearchableCombo("##WorkshopComboID", &workshop_index, workshopMapNames, "no maps selected", "type to search"))
 				{
 					setWorkshopMap(workshopMapNames[workshop_index]);
