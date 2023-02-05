@@ -134,21 +134,3 @@ void PremierSuite::checkConflicts()
 	}
 	return;
 }
-
-//int PremierSuite::findActiveButton() {
-//	if (*lowVariance) { return 0; }
-//	else if (*medVariance) { return 1; }
-//	else if (*highVariance) { return 2; }
-//	else { return 0; }
-//}
-
-//std::vector<std::string> PremierSuite::themesToVec()
-//{
-//	std::vector<std::string> filenames;
-//	std::filesystem::path themeFolder = PREMIERSUITE_DATA_PATH / "themes";
-//
-//	for (const auto& entry : std::filesystem::recursive_directory_iterator(themeFolder)) {
-//		filenames.push_back(entry.path().filename().string());
-//	}
-//	return filenames;
-//}

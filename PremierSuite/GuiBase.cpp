@@ -66,18 +66,11 @@ void PremierSuite::RenderSettings()
 	ImGui::Spacing();
 	renderSettingsTab();
 	renderKeybindsTab();
-	//renderVariablesTab();
 	ImGui::EndTabBar();
-
-	//if (myRoboFont) ImGui::PopFont();
 }
 
 void PremierSuite::Render()
 {
-	//if (!ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
-	//	ImGui::End();
-	//}
-		//ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_FirstUseEver, ImVec2(0.5, 0.5));
 	ImGui::SetNextWindowSize(ImVec2(450, 555));
 	if (ImGui::Begin(menuTitle_.c_str(), &isWindowOpen_, ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_AlwaysAutoResize)) {
 
@@ -91,7 +84,6 @@ void PremierSuite::Render()
 		ImGui::Spacing();
 		renderSettingsTab();
 		renderKeybindsTab();
-		//renderVariablesTab();
 		ImGui::EndTabBar();
 		ImGui::End();
 	}
@@ -475,79 +467,6 @@ void PremierSuite::renderSettingsTab()
 	}
 }
 
-//void PremierSuite::renderVariablesTab()
-//{
-//	if (ImGui::BeginTabItem("Variables")) {
-//
-//		ImGui::Spacing();
-//		ImGui::Text(
-//			"Custom Variables for training:\n"
-//			"Change how you load into freeplay, custom training and workshop maps.\n"
-//		);
-//
-//		ImGui::Dummy(ImVec2(0.0f, 10.0f));
-//		ImGui::Separator();
-//		ImGui::Dummy(ImVec2(0.0f, 5.0f));
-//
-//		/// Gamespeed ---------------------------------------------------------------------
-//		ImGui::Text("Slow-mo");
-//		ImGui::TextDisabled("(?)");
-//		if (ImGui::IsItemHovered())
-//			ImGui::SetTooltip("Gamespeed.\n"
-//				"Set to to slow game down, so you feel speedy in-game. \n"
-//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
-//			);
-//
-//		ImGui::SameLine(150);
-//
-//		ImGui::PushID("GameSpeed");
-//		if (ImGui::SliderFloat("", &*gameSpeed, 0.5, 1)) {
-//			_globalCvarManager->executeCommand("toggle sv_soccar_gamespeed " + std::to_string(*gameSpeed) + " 1");
-//		}
-//		ImGui::PopID();
-//
-//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
-//
-//		/// Variance ----------------------------------------------------------------------
-//		ImGui::Text("Training Variance");
-//
-//		ImGui::SameLine();
-//
-//		ImGui::PushID("Variance");
-//		ImGui::ToggleButton("Enable", &*trainingVariance);
-//		if (ImGui::IsItemHovered())
-//			ImGui::SetTooltip("Gamespeed.\n"
-//				"Set to to slow game down, so you feel speedy in-game. \n"
-//				"1 is full speed. 0.5 is half speed. 0.8 or 0.9 is a nice slowdown. \n"
-//			);
-//		ImGui::PopID();
-//
-//		if (!*trainingVariance) {
-//			ImGui::PushID("VarDisabled");
-//			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-//			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-//		}
-//
-//		int e = findActiveButton();
-//		ImGui::RadioButton("radio a", &e, 0, lowVariance, medVariance, highVariance); ImGui::SameLine();
-//		ImGui::RadioButton("radio b", &e, 1); ImGui::SameLine();
-//		ImGui::RadioButton("radio c", &e, 2);
-//
-//		ImGui::Indent(5);
-//
-//		LOG("{}", btos(*lowVariance));
-//		if (!*trainingVariance) {
-//			ImGui::PopItemFlag();
-//			ImGui::PopStyleVar();
-//			ImGui::PopID();
-//		}
-//
-//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
-//
-//		ImGui::EndTabItem();
-//	}
-//}
-//
 /// <summary> Renders about window. </summary>
 void PremierSuite::renderAboutWindow(bool* open)
 {
@@ -564,80 +483,3 @@ void PremierSuite::renderAboutWindow(bool* open)
 	ImGui::Text("Source code for this plugin is located at: https://github.com/NeuroPyPy/PremierSuite");
 	ImGui::End();
 }
-
-/// <summary> Renders main GUI theme settings. </summary>
-//void PremierSuite::renderThemesTab()
-//{
-//	if (ImGui::BeginTabItem("Themes")) {
-//		
-//		ImGui::Spacing();
-//		ImGui::Text(
-//			"Theme Selector:\n"
-//			"Change, edit, experiment with GUI themes.\n"
-//		);
-//
-//		ImGui::Dummy(ImVec2(0.0f, 10.0f));
-//		ImGui::Separator();
-//		ImGui::Dummy(ImVec2(0.0f, 5.0f));
-//
-//		ImGui::Text("Enable Themes");
-//		ImGui::SameLine();
-//		ImGui::ToggleButton("Enable Theme", &*themeEnabled);
-//		
-//		if (!*themeEnabled) {
-//			ImGui::PushID("ThemeDisabled");
-//			ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-//			ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
-//		}
-//
-//		std::string currTheme = *currentTheme;
-//		const char* currThemeChr = currTheme.c_str();
-//
-//		const std::vector<std::string> themes = themesToVec();
-//		int idx = std::distance(themes.begin(), std::find(themes.begin(), themes.end(), currThemeChr));
-//
-//		ImGui::TextDisabled("(?)");
-//		if (ImGui::IsItemHovered())
-//			ImGui::SetTooltip("Enable custom themes.\n"
-//				"Use capital first letter, lowercase next letters, PascalCase for compound words. \n\n"
-//				"Note that this will change all gui themes, not just for this plugin. \n\n"
-//			);
-//
-//		ImGui::SameLine(150);
-//
-//		ImGui::SetNextItemWidth(long_width / 2);
-//		if (ImGui::SearchableCombo("##", &idx, themes, "no themes found", "type to search"))
-//		{
-//			//theme.LoadFromDisk(themes[idx]);
-//			setTheme(themes[idx]);
-//			ImGui::EndCombo();
-//		}
-//		ImGui::PopItemWidth();
-//
-//		ImGui::Dummy(ImVec2(0.0f, 20.0f));
-//
-//		ImGui::PushID("ThemeEditor");
-//
-//		ImGui::Text("Edit Theme");
-//		ImGui::SameLine();
-//
-//		if (ImGui::Button("Editor"))
-//		{
-//			ImGui::Begin("Theme Editor", &*showEditor);
-//			ImGui::ShowStyleEditor();
-//			ImGui::End();
-//		}
-//		ImGui::PopID();
-//
-//		if (!*themeEnabled) {
-//
-//			ImGui::PopItemFlag();
-//			ImGui::PopStyleVar();
-//			ImGui::PopID();
-//		}
-//		
-//
-//		ImGui::EndTabItem();
-//	}
-//}
-

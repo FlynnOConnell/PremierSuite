@@ -149,8 +149,6 @@ void PremierSuite::callbackSetDelay(ServerWrapper server, void* params, std::str
 
 	if (server.IsNull()) { return; }
 
-	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
-	else { delay = *delayExit; }*/
 	if (isTournament(server)) {
 		return;
 	}
@@ -688,34 +686,3 @@ void PremierSuite::registerCvars() {
 		}
 	);
 }
-
-//void PremierSuite::bindBMCvars() {
-//
-//	//-----------------------------------------------------------------------------
-//	// Bakkesmod Cvars ------------------------------------------------------------
-//	//-----------------------------------------------------------------------------
-//
-//	gameSpeed = std::make_shared<float>(1);
-//	_globalCvarManager->getCvar("sv_soccar_gamespeed").bindTo(gameSpeed);
-//
-//	workshopRandom = std::make_shared<bool>(false);
-//	//_globalCvarManager->getCvar("workshop_playlist_random").bindTo(workshopRandom);
-//
-//	trainingVariance = std::make_shared<bool>(false);
-//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(trainingVariance);
-//
-//	lowVariance = std::make_shared<bool>(false);
-//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(lowVariance);
-//
-//	*lowVariance = false;
-//
-//	medVariance = std::make_shared<bool>(false);
-//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(medVariance);
-//	*medVariance = false;
-//
-//	highVariance = std::make_shared<bool>(false);
-//	_globalCvarManager->getCvar("sv_training_enabled").bindTo(highVariance);
-//	*highVariance = false;
-//
-//
-//}
