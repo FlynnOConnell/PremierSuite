@@ -18,9 +18,12 @@ The easiest way to use PremierSuite is via the in-game bakkesmod plugin manager.
 
 ![example-gif](assets/Pluginmanager366.png)
 
-#### Build and compile
+#### Paste in the .dll
+To get the most up-to-date version, download the source code (download + extract anywhere you like or simply clone the master branch, either will work). In your extracted directory, copy the .dll located in `plugins`. Navigate to your bakkesmod install (open the bakkesmod application popup, bottom right of your desktop, click file -> open bakkesmod folder -> plugins) and paste in the file with all of your other plugins. Replace any existing file. 
 
-To get the most up-to-date version, you can build and compile from the source code. The easiest way to do this is by downloading [Visual Studio Community Edition](https://visualstudio.microsoft.com/vs/community/). During the initial setup of visual studio, enture you select and download `Desktop development with C++`.
+#### Build and compile 
+
+To get the most up-to-date version and make any changes you may want to make, you can build and compile from the source code. The easiest way to do this is by downloading [Visual Studio Community Edition](https://visualstudio.microsoft.com/vs/community/). During the initial setup of visual studio, enture you select and download `Desktop development with C++`.
 
 Next, download the source code (download + extract anywhere you like or simply clone the master branch, either will work). Open `PremierSuite.sln` with visual studio. Once open, navigate the top toolbar to `build -> build Solution`. This will compile all cpp and associated header files and automatically inject the .dll into your bakkesmod plugins folder, replacing any current instance of PremierSuite. And you're good to go! 
 
