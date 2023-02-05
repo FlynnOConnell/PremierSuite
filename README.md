@@ -16,7 +16,7 @@ Any and all help is welcome for updates and features. Feel free to ask questions
 #### In-game download
 The easiest way to use PremierSuite is via the in-game bakkesmod plugin manager. In the F2 BM menu -> plugins -> open pluginmanager. Enter 366 into the ID box and click Install by ID.
 
-![](assets/Pluginmanager366.png)
+![](assets/PluginManager366.png)
 
 #### Paste in the .dll
 To get the most up-to-date version, download the source code (download + extract anywhere you like or simply clone the master branch, either will work). In your extracted directory, copy the .dll located in `plugins`. Navigate to your bakkesmod install (open the bakkesmod application popup, bottom right of your desktop, click file -> open bakkesmod folder -> plugins) and paste in the file with all of your other plugins. Replace any existing file. 
