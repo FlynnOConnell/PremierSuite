@@ -172,8 +172,6 @@ void PremierSuite::callbackQueueDelay(ServerWrapper server, void* params, std::s
 
 	LOG("Game ended: Queue Delay: {}.", std::to_string(*delayQueue));
 
-	/*if (*autoGG) { delay = delaySetting + *autoGGDelay; }
-	else { delay = *delayExit; }*/
 	if (isTournament(server)) {
 		return;
 	}
@@ -590,14 +588,6 @@ void PremierSuite::registerCvars() {
 		}
 	);
 
-	// theme
-	//themeEnabled = std::make_shared<bool>(false);
-	//cvarManager->registerCvar("themes_enabled", "0", "Enable GUI Themes").bindTo(themeEnabled);
-	//cvarManager->getCvar("themes_enabled").addOnValueChanged([this](std::string oldValue, CVarWrapper cvar) {
-	//	*themeEnabled = cvar.getBoolValue();
-	//	}
-	//);
-
 	//-----------------------------------------------------------------------------
 	// Keybinds | Codes | Maps (STRING) -------------------------------------------
 	//-----------------------------------------------------------------------------
@@ -646,17 +636,6 @@ void PremierSuite::registerCvars() {
 	workshopMapDirPath = std::make_shared<std::string>();
 	cvarManager->registerCvar("ps_workshop_path", WORKSHOP_MAPS_PATH.string(),
 		"Default path for your workshop maps directory").bindTo(workshopMapDirPath);
-
-	//// THEME directory path
-	//themeIniPath = std::make_shared<std::string>();
-	//cvarManager->registerCvar("ps_theme_path", PREMIERSUITE_DATA_PATH.string(),
-	//	"Default path for your themes directory").bindTo(themeIniPath);
-
-	//// Current theme
-	//currentTheme = std::make_shared<std::string>("default.ini");
-	//cvarManager->registerCvar("ps_current_theme", "default.ini",
-	//	"Default path for your themes directory").bindTo(currentTheme);
-
 
 	//-----------------------------------------------------------------------------
 	// Timeout Delays (FLOAT) -----------------------------------------------------
