@@ -1,3 +1,7 @@
+There are currently some issues with crashing on Windows 11 and some inconsistent auto-queue's. I'm working on it, but things are slow and this isn't my top priority. If you have any suggestions or want to help with this plugin, let me know! 
+
+
+
 ![Drag Racing](assets/logobanner.png)
 # PremierSuite - Rocket League Plugin
 ![example-gif](assets/ExampleGif_1_0.gif)
