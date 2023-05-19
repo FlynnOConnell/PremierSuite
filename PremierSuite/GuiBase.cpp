@@ -57,10 +57,6 @@ void PremierSuite::OnClose()
 
 void PremierSuite::RenderSettings()
 {
-	//isSettings = true;
-	//isGui = false;
-	//SetWidgetSizes();
-	//if (myRoboFont) ImGui::PushFont(myRoboFont);
 	ImGui::BeginTabBar("#TabBarSettings", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip | ImGuiTabBarFlags_FittingPolicyResizeDown);
 	ImGui::Indent(5);
 	ImGui::Spacing();
@@ -98,11 +94,7 @@ void PremierSuite::Render()
 /// <summary> Renders main menu. </summary>
 void PremierSuite::renderMenu()
 {
-	static bool show_app_console = false;
-	static bool show_app_log = false;
 	static bool show_about_window = false;
-	static bool show_demo_window = false;
-	if (show_demo_window)             ImGui::ShowDemoWindow(&show_demo_window);
 
 	// Dear ImGui Apps (accessible from the "Tools" menu)
 	static bool show_app_metrics = false;
@@ -110,18 +102,7 @@ void PremierSuite::renderMenu()
 	static bool show_app_about = false;
 
 	ImGuiStyle& style = ImGui::GetStyle();
-
 	if (show_app_about) { renderAboutWindow(&show_app_about); }
-	if (show_app_metrics) { ImGui::ShowMetricsWindow(&show_app_metrics); }
-	const bool has_debug_tools = true;
-	if (ImGui::BeginMenu("Tools")) {
-		HelpMarker("Tools for developers.");
-		ImGui::MenuItem("Metrics/Debugger", NULL, &show_app_metrics, has_debug_tools);
-		ImGui::MenuItem("Console", NULL, &show_app_console);
-		ImGui::MenuItem("Log", NULL, &show_app_log);
-		ImGui::MenuItem("ImGui Demo", NULL, &show_demo_window);
-		ImGui::EndMenu();
-	}
 	if (ImGui::BeginMenu("About"))
 	{
 		ImGui::MenuItem("About PremierSuite", NULL, &show_app_about);

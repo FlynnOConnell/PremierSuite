@@ -303,11 +303,11 @@ void PremierSuite::onMatchEnd(ServerWrapper server, void* params, std::string ev
 		return;
 	}
 	if (!*enabled) return;
-
-	if (*exitEnabled) {
-		LOG("MainMenu exit is true, calling callbacksetDelay.");
-		callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); }, false);
-	}
+	else 
+		if (*exitEnabled) {
+			LOG("MainMenu exit is true, calling callbacksetDelay.");
+			callbackSetDelay(server, params, eventName, [this]() { this->executeMainMenu(); }, false);
+		}
 	else {
 		if (*freeplayEnabled) {
 			LOG("Freeplay exit is true, calling callbacksetDelay.");
@@ -398,7 +398,6 @@ void PremierSuite::onLoad()
 		if (!exists(workshop_path)) { LOG("Workshop path not a directory"); return; }
 		set_udk_files(WORKSHOP_MAPS_PATH);
 		workshopMapNames = std::vector<std::string>(KeysToVec(WorkshopMaps));
-
 	}
 
 	// Initialize vector of maps
@@ -412,7 +411,6 @@ void PremierSuite::onLoad()
 	gameWrapper->SetTimeout([this](GameWrapper* gw) {
 		this->handleKeybindCvar();
 		this->checkConflicts();
-		//this->bindBMCvars();
 		}, 1);
 
 	hookMatchEnded();

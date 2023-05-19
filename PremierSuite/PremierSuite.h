@@ -165,7 +165,6 @@ private:
 	bool loading = false;
 	bool awaitQueue = false;
 
-
 	bool enableCustomMaps = false;
 	bool refreshCustomMapPaths = true;
 	std::map<std::string, std::string> maps;
